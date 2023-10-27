@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Tiros/HUD/TirosHUD.h"
 #include "CombatComponent.generated.h"
 
 
@@ -29,9 +30,24 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
+	void Fire();
+
+	void FireButtonPressed(bool bPressed);
+
+	UFUNCTION(Server,Reliable)
+	void RPC_ServerFire(const FVector_NetQuantize& TraceHitTarget);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void RPC_MulticastFire(const FVector_NetQuantize& TraceHitTarget);
+
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
+
+	void SetHUDCrosshairs(float DeltaTime);
 private:
 
 	ATirosCharacter* Character;
+	class ATirosPlayerController* Controller;
+	class ATirosHUD* HUD;
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
@@ -44,6 +60,42 @@ private:
 	UPROPERTY(EditAnywhere)
 	float AimWalkSpeed;
 
+	bool bFireButtonPressed;
+
+	// Hud and Crosshairs
+	float CrosshairVelocityFactor;
+	float CrosshairInAirFactorFactor;
+	float CrosshairAimingFactor;
+	float CrosshairShootingFactor;
+	
+	FVector HitTarget;
+	
+	FHUDPackage HUDPackage;
+
+	/**
+	* Aiming and FOV
+	*/
+	
+	//FOV when not aiming; set to the camera base FOV in BeginPlay
+	float DefaultFOV;
+	
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float ZoomedFOV = 30.f;
+	
+	float CurrentFOV;
+	
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float ZoomInterpSpeed = 20.f;
+
+	void InterpFOV(float DeltaTime);
+
+	/**
+	* Automatic fire
+	*/
+	FTimerHandle FireTimer;
+	bool bCanFire = true;
+	void StartFireTimer();
+	void FireTimerFinished();
 public:	
 
 		

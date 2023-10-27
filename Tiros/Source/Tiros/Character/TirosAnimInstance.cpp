@@ -37,6 +37,7 @@ void UTirosAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsCrouched = TirosCharacter->bIsCrouched;
 	bAiming = TirosCharacter->IsAiming();
 	TurningInPlace = TirosCharacter->GetTurningInPlace();
+	bRotateRootBone = TirosCharacter->ShouldRotateRootBone();
 
 	// Offset yaw for Strafing
 	const FRotator AimRotation = TirosCharacter->GetBaseAimRotation();
@@ -64,5 +65,14 @@ void UTirosAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			FRotator::ZeroRotator,OutPosition, OutRotation);
 		LeftHandTransform.SetLocation(OutPosition);
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
+
+		if(TirosCharacter->IsLocallyControlled())
+		{
+			bLocallyControlled = true;
+			const FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("Hand_R"), RTS_World);
+			const FRotator LookAtRotation =  UKismetMathLibrary::FindLookAtRotation(RightHandTransform.GetLocation(),
+			                                                                        RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - TirosCharacter->GetHitTarget()));
+			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaSeconds, 30.f);
+		}
 	}
 }
