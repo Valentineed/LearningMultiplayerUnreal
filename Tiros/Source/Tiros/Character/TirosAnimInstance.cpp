@@ -38,6 +38,7 @@ void UTirosAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bAiming = TirosCharacter->IsAiming();
 	TurningInPlace = TirosCharacter->GetTurningInPlace();
 	bRotateRootBone = TirosCharacter->ShouldRotateRootBone();
+	bEliminated = TirosCharacter->IsEliminated();
 
 	// Offset yaw for Strafing
 	const FRotator AimRotation = TirosCharacter->GetBaseAimRotation();

@@ -3,10 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "Tiros/Interfaces/InteractWithCrosshairInterface.h"
 #include "Tiros/TriosTypes/TurningPlace.h"
 #include "TirosCharacter.generated.h"
+
+class FOnTimelineFloat;
 
 UCLASS()
 class TIROS_API ATirosCharacter : public ACharacter, public IInteractWithCrosshairInterface
@@ -21,11 +24,12 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
-	
-	UFUNCTION(NetMulticast, Unreliable)
-	void RPC_MulticastHit();
-
+	void PlayEliminatedMontage();
 	virtual void OnRep_ReplicatedMovement() override;
+
+	void Eliminated();
+	UFUNCTION(NetMulticast, Reliable)
+	void RPC_MulticastEliminated();
 
 protected:
 	virtual void BeginPlay() override;
@@ -46,6 +50,9 @@ protected:
 	void FireButtonPressed();
 	void FireButtonRelease();
 	void PlayHitReactMontage();
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+	void UpdateHUDHealth();
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -82,6 +89,10 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* HitReactMontage;
+	
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class UAnimMontage* EliminatedMontage;
+
 
 	void HideCameraIfCharacterClose();
 	UPROPERTY(EditAnywhere)
@@ -94,6 +105,52 @@ private:
 	float ProxyYaw;
 	float TimeSinceLastMovementReplication;
 	float CalculateSpeed();
+
+	/**
+	 *  Player Health
+	 */
+	 
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxHealth = 100.f;
+	
+	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
+	float Health = 100.f;
+
+	UFUNCTION()
+	void OnRep_Health();
+
+	class ATirosPlayerController* TirosPlayerController;
+
+	bool bEliminated = false;
+
+	FTimerHandle EliminatedTimer;
+	
+	UPROPERTY(EditDefaultsOnly)
+	float EliminatedDelay = 3.f;
+	
+	void EliminatedTimerFinished();
+
+	/**
+	 * Dissolve effect
+	 */
+	UPROPERTY(VisibleAnywhere)
+	UTimelineComponent* DissolveTimeline;
+	FOnTimelineFloat DissolveTrack;
+
+	UPROPERTY(EditAnywhere)
+	UCurveFloat* DissolveCurve;
+
+	UFUNCTION()
+	void UpdateDissolveMaterial(float DissolveValue);
+	void StartDissolve();
+
+	// Dynamic instance that we can change at runtime
+	UPROPERTY(VisibleAnywhere, Category = Eliminated)
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance;
+
+	// Material instance set on the BP, used with dynamic instance
+	UPROPERTY(EditAnywhere, Category = Eliminated)
+	UMaterialInstance* DissolveMaterialInstance;
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -106,4 +163,5 @@ public:
 	FVector GetHitTarget() const;
 	FORCEINLINE UCameraComponent* GetFollowCamera() const {return FollowCamera;}
 	FORCEINLINE bool ShouldRotateRootBone() const {return bRotateRootBone;} 
+	FORCEINLINE bool IsEliminated() const {return bEliminated;} 
 };

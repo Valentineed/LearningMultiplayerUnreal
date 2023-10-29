@@ -11,6 +11,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Tiros/Tiros.h"
+#include "Tiros/GameMode/TirosGameMode.h"
+#include "Tiros/PlayerController/TirosPlayerController.h"
 #include "Tiros/TirosComponents/CombatComponent.h"
 #include "Tiros/Weapon/Weapon.h"
 
@@ -19,6 +21,7 @@ ATirosCharacter::ATirosCharacter()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetMesh());
@@ -46,6 +49,8 @@ ATirosCharacter::ATirosCharacter()
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	NetUpdateFrequency = 66.f;
 	MinNetUpdateFrequency = 33.f;
+
+	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
 }
 
 void ATirosCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -53,6 +58,7 @@ void ATirosCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(ATirosCharacter, OverlappingWeapon, COND_OwnerOnly);
+	DOREPLIFETIME(ATirosCharacter, Health);
 }
 
 void ATirosCharacter::PostInitializeComponents()
@@ -80,6 +86,15 @@ void ATirosCharacter::PlayFireMontage(bool bAiming)
 	}
 }
 
+void ATirosCharacter::PlayEliminatedMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && EliminatedMontage)
+	{
+		AnimInstance->Montage_Play(EliminatedMontage);
+	}
+}
+
 void ATirosCharacter::PlayHitReactMontage()
 {
 	if(Combat == nullptr || Combat->EquippedWeapon == nullptr)
@@ -90,8 +105,26 @@ void ATirosCharacter::PlayHitReactMontage()
 	if(AnimInstance && HitReactMontage)
 	{
 		AnimInstance->Montage_Play(HitReactMontage);
-		FName SectionName("FromFront");
+		const FName SectionName("FromFront");
 		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void ATirosCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
+	AController* InstigatorController, AActor* DamageCauser)
+{
+	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+	if(Health != 0.f)
+	{
+		return;
+	}
+	if(ATirosGameMode* TirosGameMode = GetWorld()->GetAuthGameMode<ATirosGameMode>())
+	{
+		TirosPlayerController = TirosPlayerController == nullptr? Cast<ATirosPlayerController>(Controller) : TirosPlayerController;
+		ATirosPlayerController* AttackerController = Cast<ATirosPlayerController>(InstigatorController);
+		TirosGameMode->PlayerEliminated(this, TirosPlayerController, AttackerController);
 	}
 }
 
@@ -102,9 +135,43 @@ void ATirosCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f;
 }
 
+void ATirosCharacter::Eliminated()
+{
+	RPC_MulticastEliminated();
+	GetWorldTimerManager().SetTimer(EliminatedTimer, this, &ThisClass::EliminatedTimerFinished, EliminatedDelay);
+}
+
+void ATirosCharacter::RPC_MulticastEliminated_Implementation()
+{
+	bEliminated = true;
+	PlayEliminatedMontage();
+	
+	if(DissolveMaterialInstance)
+	{
+		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance,this, FName(""));
+		GetMesh()->SetMaterial(0, DynamicDissolveMaterialInstance);
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), 0.55f);
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
+	}
+	StartDissolve();
+}
+
+void ATirosCharacter::EliminatedTimerFinished()
+{
+	if(ATirosGameMode* TirosGameMode = GetWorld()->GetAuthGameMode<ATirosGameMode>())
+	{
+		TirosGameMode->RequestRespawn(this, Controller);
+	}
+}
+
 void ATirosCharacter::BeginPlay()
 {
-	Super::BeginPlay();	
+	Super::BeginPlay();
+	UpdateHUDHealth();
+	if(HasAuthority())
+	{
+		OnTakeAnyDamage.AddDynamic(this, &ATirosCharacter::ReceiveDamage);
+	}
 }
 
 void ATirosCharacter::Tick(float DeltaTime)
@@ -350,11 +417,6 @@ void ATirosCharacter::RPC_ServerEquipButtonPressed_Implementation()
 	}
 }
 
-void ATirosCharacter::RPC_MulticastHit_Implementation()
-{
-	PlayHitReactMontage();
-}
-
 void ATirosCharacter::HideCameraIfCharacterClose()
 {
 	if(!IsLocallyControlled())
@@ -386,6 +448,39 @@ float ATirosCharacter::CalculateSpeed()
 	FVector Velocity = GetVelocity();
 	Velocity.Z = 0.f;
 	return Velocity.Size();
+}
+
+void ATirosCharacter::OnRep_Health()
+{
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+}
+
+void ATirosCharacter::UpdateHUDHealth()
+{
+	TirosPlayerController = TirosPlayerController == nullptr ? Cast<ATirosPlayerController>(Controller) : TirosPlayerController;
+	if(TirosPlayerController)
+	{
+		TirosPlayerController->SetHUDHeath(Health, MaxHealth);
+	}
+}
+
+void ATirosCharacter::UpdateDissolveMaterial(float DissolveValue)
+{
+	if(DynamicDissolveMaterialInstance)
+	{
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), DissolveValue);
+	}
+}
+
+void ATirosCharacter::StartDissolve()
+{
+	DissolveTrack.BindDynamic(this, &ThisClass::UpdateDissolveMaterial);
+	if(DissolveCurve && DissolveTimeline)
+	{
+		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
+		DissolveTimeline->Play();
+	}
 }
 
 void ATirosCharacter::SetOverlappingWeapon(AWeapon* Weapon)

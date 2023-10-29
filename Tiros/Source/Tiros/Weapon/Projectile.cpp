@@ -55,12 +55,6 @@ void AProjectile::BeginPlay()
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
-	ATirosCharacter* TirosCharacter = Cast<ATirosCharacter>(OtherActor);
-	if(TirosCharacter)
-	{
-		TirosCharacter->RPC_MulticastHit();
-	}
-	
 	Destroy();
 }
 

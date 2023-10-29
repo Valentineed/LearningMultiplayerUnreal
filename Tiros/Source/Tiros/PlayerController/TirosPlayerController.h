@@ -13,5 +13,11 @@ UCLASS()
 class TIROS_API ATirosPlayerController : public APlayerController
 {
 	GENERATED_BODY()
+public:
+	void SetHUDHeath(float Health, float MaxHealth);
+protected:
+	virtual void BeginPlay() override;
+private:
+	class ATirosHUD* TirosHUD;
 	
 };

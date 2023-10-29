@@ -3,6 +3,25 @@
 
 #include "TirosHUD.h"
 
+#include "CharacterOverlay.h"
+#include "GameFramework/PlayerController.h"
+
+void ATirosHUD::BeginPlay()
+{
+	Super::BeginPlay();
+	AddCharacterOverlay();
+}
+
+void ATirosHUD::AddCharacterOverlay()
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if (PlayerController && CharacterOverlayClass)
+	{
+		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
+		CharacterOverlay->AddToViewport();
+	}
+}
+
 void ATirosHUD::DrawHUD()
 {
 	Super::DrawHUD();
