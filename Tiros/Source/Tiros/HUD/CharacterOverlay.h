@@ -21,15 +21,17 @@ public:
 	class UTextBlock* HealthText;
 	
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* ScoreAmount;
+	UTextBlock* ScoreAmount;
 	
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* DeathsAmount;
+	UTextBlock* DeathsAmount;
 	
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* WeaponAmmoAmount;
+	UTextBlock* WeaponAmmoAmount;
 	
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* CarriedAmmoAmount;
+	UTextBlock* CarriedAmmoAmount;
 	
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* MatchCountdownText;	
 };
