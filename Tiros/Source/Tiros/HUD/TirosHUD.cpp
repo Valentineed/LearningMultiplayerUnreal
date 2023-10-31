@@ -71,5 +71,5 @@ void ATirosHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVe
 	
 	DrawTexture(Texture, TextureDrawPoint.X, TextureDrawPoint.Y, TextureWidth,
 		TextureHeight,0.f,0.f,1.f,1.f,
-		FLinearColor::White);
+		CrosshairColor);
 }

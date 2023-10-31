@@ -116,7 +116,7 @@ bool UCombatComponent::CanFire()
 {
 	if(EquippedWeapon)
 	{
-		return !EquippedWeapon->IsEmpty() && !bCanFire && CombatState == ECombatState::ECS_Unoccupied;
+		return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
 	}
 	return false;
 }
