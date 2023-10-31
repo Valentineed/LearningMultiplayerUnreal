@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Tiros/Weapon/Weapon.h"
+#include "Tiros/TirosTypes/CombatState.h"
 
 void UTirosAnimInstance::NativeInitializeAnimation()
 {
@@ -76,4 +77,6 @@ void UTirosAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaSeconds, 30.f);
 		}
 	}
+
+	bUseFabrik = TirosCharacter->GetCombatState() != ECombatState::ECS_Reloading;
 }

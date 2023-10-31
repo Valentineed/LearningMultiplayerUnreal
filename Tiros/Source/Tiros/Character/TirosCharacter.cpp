@@ -13,6 +13,7 @@
 #include "Tiros/Tiros.h"
 #include "Tiros/GameMode/TirosGameMode.h"
 #include "Tiros/PlayerController/TirosPlayerController.h"
+#include "Tiros/PlayerState/TirosPlayerState.h"
 #include "Tiros/TirosComponents/CombatComponent.h"
 #include "Tiros/Weapon/Weapon.h"
 
@@ -86,6 +87,27 @@ void ATirosCharacter::PlayFireMontage(bool bAiming)
 	}
 }
 
+void ATirosCharacter::PlayReloadMontage()
+{
+	if(Combat == nullptr || Combat->EquippedWeapon == nullptr)
+	{
+		return;
+	}
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+		switch (Combat->EquippedWeapon->GetWeaponType())
+		{
+		case EWeaponType::EWT_AssaultRifle:
+			SectionName = FName("Rifle");
+			break;
+		}
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
 void ATirosCharacter::PlayEliminatedMontage()
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -137,15 +159,24 @@ void ATirosCharacter::OnRep_ReplicatedMovement()
 
 void ATirosCharacter::Eliminated()
 {
+	if(Combat && Combat->EquippedWeapon)
+	{
+		Combat->EquippedWeapon->Dropped();
+	}
 	RPC_MulticastEliminated();
 	GetWorldTimerManager().SetTimer(EliminatedTimer, this, &ThisClass::EliminatedTimerFinished, EliminatedDelay);
 }
 
 void ATirosCharacter::RPC_MulticastEliminated_Implementation()
 {
+	if(TirosPlayerController)
+	{
+		TirosPlayerController->SetHUDWeaponAmmo(0);
+	}
 	bEliminated = true;
 	PlayEliminatedMontage();
-	
+
+	//Start dissolve effect
 	if(DissolveMaterialInstance)
 	{
 		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance,this, FName(""));
@@ -154,6 +185,17 @@ void ATirosCharacter::RPC_MulticastEliminated_Implementation()
 		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
 	}
 	StartDissolve();
+
+	// Disable character movement
+	GetCharacterMovement()->DisableMovement();
+	GetCharacterMovement()->StopMovementImmediately();
+	if(TirosPlayerController)
+	{
+		DisableInput(TirosPlayerController);
+	}
+	// Disable collision
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ATirosCharacter::EliminatedTimerFinished()
@@ -192,6 +234,7 @@ void ATirosCharacter::Tick(float DeltaTime)
 		CalculateAO_Pitch();
 	}
 	HideCameraIfCharacterClose();
+	PollInit();
 }
 
 void ATirosCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -210,6 +253,7 @@ void ATirosCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ATirosCharacter::AimButtonRelease);
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATirosCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ATirosCharacter::FireButtonRelease);
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ATirosCharacter::ReloadButtonPressed);
 }
 
 void ATirosCharacter::MoveForward(float Value)
@@ -265,6 +309,14 @@ void ATirosCharacter::CrouchButtonPressed()
 void ATirosCharacter::CrouchButtonRelease()
 {
 	UnCrouch();
+}
+
+void ATirosCharacter::ReloadButtonPressed()
+{
+	if(Combat)
+	{
+		Combat->Reload();
+	}
 }
 
 void ATirosCharacter::AimButtonPressed()
@@ -465,6 +517,19 @@ void ATirosCharacter::UpdateHUDHealth()
 	}
 }
 
+void ATirosCharacter::PollInit()
+{
+	if(TirosPlayerState == nullptr)
+	{
+		TirosPlayerState = GetPlayerState<ATirosPlayerState>();
+		if(TirosPlayerState)
+		{
+			TirosPlayerState->AddToScore(0.f);
+			TirosPlayerState->AddToDeaths(0);
+		}
+	}
+}
+
 void ATirosCharacter::UpdateDissolveMaterial(float DissolveValue)
 {
 	if(DynamicDissolveMaterialInstance)
@@ -522,6 +587,12 @@ FVector ATirosCharacter::GetHitTarget() const
 {
 	if (Combat == nullptr) return FVector();
 	return Combat->HitTarget;
+}
+
+ECombatState ATirosCharacter::GetCombatState() const
+{
+	if (Combat == nullptr) return ECombatState::ECS_MAX;
+	return Combat->CombatState;
 }
 
 void ATirosCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)

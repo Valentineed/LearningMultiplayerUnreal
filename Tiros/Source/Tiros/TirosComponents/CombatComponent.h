@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Tiros/HUD/TirosHUD.h"
+#include "Tiros/Weapon/WeaponTypes.h"
+#include "Tiros/TirosTypes/CombatState.h"
 #include "CombatComponent.generated.h"
 
 
@@ -20,6 +22,10 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+	void Reload();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
 
 protected:
 	virtual void BeginPlay() override;
@@ -39,14 +45,23 @@ protected:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void RPC_MulticastFire(const FVector_NetQuantize& TraceHitTarget);
-
+	
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 	void SetHUDCrosshairs(float DeltaTime);
+	
+	UFUNCTION(Server,Reliable)
+	void RPC_ServerReload();
+
+	void HandleReload();
+	int32 AmountToReload();
 private:
 
+	UPROPERTY()
 	ATirosCharacter* Character;
+	UPROPERTY()
 	class ATirosPlayerController* Controller;
+	UPROPERTY()
 	class ATirosHUD* HUD;
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
@@ -96,6 +111,30 @@ private:
 	bool bCanFire = true;
 	void StartFireTimer();
 	void FireTimerFinished();
+
+	bool CanFire();
+
+	// Carried ammo for the currently equipped weapon
+	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
+	int32 CarriedAmmo;
+
+	UFUNCTION()
+	void OnRep_CarriedAmmo();
+
+	TMap<EWeaponType, int32> CarriedAmmoMap;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingAmmo = 30;
+	
+	void InitializeCarriedAmmo();
+
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	ECombatState CombatState = ECombatState::ECS_Unoccupied;
+
+	UFUNCTION()
+	void OnRep_CombatState();
+
+	void UpdateAmmoValues();
 public:	
 
 		

@@ -6,7 +6,8 @@
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "Tiros/Interfaces/InteractWithCrosshairInterface.h"
-#include "Tiros/TriosTypes/TurningPlace.h"
+#include "Tiros/TirosTypes/TurningPlace.h"
+#include "Tiros/TirosTypes/CombatState.h"
 #include "TirosCharacter.generated.h"
 
 class FOnTimelineFloat;
@@ -24,6 +25,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
+	void PlayReloadMontage();
 	void PlayEliminatedMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 
@@ -41,6 +43,7 @@ protected:
 	void EquipButtonPressed();
 	void CrouchButtonPressed();
 	void CrouchButtonRelease();
+	void ReloadButtonPressed();
 	void AimButtonPressed();
 	void AimButtonRelease();
 	void CalculateAO_Pitch();
@@ -53,7 +56,8 @@ protected:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 	void UpdateHUDHealth();
-	
+	// Pool for any revelant class and initialize your HUD
+	void PollInit();
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
@@ -70,7 +74,7 @@ private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* Combat;
 
 	UFUNCTION(Server, Reliable)
@@ -86,6 +90,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage;
+	
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class UAnimMontage* ReloadMontage;
 	
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* HitReactMontage;
@@ -119,6 +126,7 @@ private:
 	UFUNCTION()
 	void OnRep_Health();
 
+	UPROPERTY()
 	class ATirosPlayerController* TirosPlayerController;
 
 	bool bEliminated = false;
@@ -151,6 +159,9 @@ private:
 	// Material instance set on the BP, used with dynamic instance
 	UPROPERTY(EditAnywhere, Category = Eliminated)
 	UMaterialInstance* DissolveMaterialInstance;
+
+	UPROPERTY()
+	class ATirosPlayerState* TirosPlayerState;
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -164,4 +175,7 @@ public:
 	FORCEINLINE UCameraComponent* GetFollowCamera() const {return FollowCamera;}
 	FORCEINLINE bool ShouldRotateRootBone() const {return bRotateRootBone;} 
 	FORCEINLINE bool IsEliminated() const {return bEliminated;} 
+	FORCEINLINE float GetHealth() const {return Health;}
+	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
+	ECombatState GetCombatState() const;
 };

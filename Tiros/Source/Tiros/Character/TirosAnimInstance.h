@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "Tiros/TriosTypes/TurningPlace.h"
+#include "Tiros/TirosTypes/TurningPlace.h"
 #include "TirosAnimInstance.generated.h"
 
 /**
@@ -75,4 +75,7 @@ private:
 	
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	bool bEliminated;
+	
+	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	bool bUseFabrik;
 };
