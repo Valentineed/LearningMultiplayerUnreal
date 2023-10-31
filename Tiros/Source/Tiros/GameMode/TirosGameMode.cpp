@@ -9,6 +9,32 @@
 #include "Tiros/PlayerController/TirosPlayerController.h"
 #include "Tiros/PlayerState/TirosPlayerState.h"
 
+ATirosGameMode::ATirosGameMode()
+{
+	bDelayedStart = true;
+	
+}
+
+
+void ATirosGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	LevelStartingTime = GetWorld()->GetTimeSeconds();
+}
+
+void ATirosGameMode::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	if(MatchState == MatchState::WaitingToStart)
+	{
+		CountdownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		if(CountdownTime <= 0.f)
+		{
+			StartMatch();
+		}
+	}
+}
+
 void ATirosGameMode::PlayerEliminated(ATirosCharacter* EliminatedCharacter, ATirosPlayerController* VictimController,
                                       ATirosPlayerController* AttackerController)
 {
