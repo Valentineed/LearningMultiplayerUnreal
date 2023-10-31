@@ -12,6 +12,7 @@
 #include "Tiros/PlayerController/TirosPlayerController.h"
 #include "Tiros/Weapon/Weapon.h"
 #include "TimerManager.h"
+#include "Sound/SoundCue.h"
 
 #define TRACE_LENGHT 80000.f;
 
@@ -110,6 +111,10 @@ void UCombatComponent::FireTimerFinished()
 	{
 		Fire();
 	}
+	if(EquippedWeapon->IsEmpty())
+	{
+		Reload();
+	}
 }
 
 bool UCombatComponent::CanFire()
@@ -183,6 +188,16 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	{
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
 	}
+
+	if(EquippedWeapon->EquipSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation());
+	}
+	if(EquippedWeapon->IsEmpty())
+	{
+		Reload();
+	}
+	
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
 }
@@ -286,6 +301,10 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		}
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
+		if(EquippedWeapon->EquipSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation());
+		}	
 	}
 }
 
