@@ -319,7 +319,10 @@ void ATirosPlayerController::HandleMatchHasStarted()
 	TirosHUD = TirosHUD == nullptr ? Cast<ATirosHUD>(GetHUD()) : TirosHUD;
 	if(TirosHUD)
 	{
-		TirosHUD->AddCharacterOverlay();
+		if(TirosHUD->CharacterOverlay == nullptr)
+		{
+			TirosHUD->AddCharacterOverlay();
+		}
 		if(TirosHUD->Announcement)
 		{
 			TirosHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
