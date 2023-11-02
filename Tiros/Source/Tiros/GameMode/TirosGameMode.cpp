@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
 #include "Tiros/Character/TirosCharacter.h"
+#include "Tiros/GameState/TirosGameState.h"
 #include "Tiros/PlayerController/TirosPlayerController.h"
 #include "Tiros/PlayerState/TirosPlayerState.h"
 
@@ -69,9 +70,11 @@ void ATirosGameMode::PlayerEliminated(ATirosCharacter* EliminatedCharacter, ATir
 	ATirosPlayerState* AttackerPlayerState = AttackerController? Cast<ATirosPlayerState>(AttackerController->PlayerState) : nullptr;
 	ATirosPlayerState* VictimPlayerState = VictimController? Cast<ATirosPlayerState>(VictimController->PlayerState) : nullptr;
 
-	if(AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
+	ATirosGameState* TirosGameState = GetGameState<ATirosGameState>();
+	if(AttackerPlayerState && AttackerPlayerState != VictimPlayerState && TirosGameState)
 	{
 		AttackerPlayerState->AddToScore(1.f);
+		TirosGameState->UpdateTopScore(AttackerPlayerState);
 	}
 
 	if(VictimPlayerState)

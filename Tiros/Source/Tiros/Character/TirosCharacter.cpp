@@ -8,6 +8,7 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "Tiros/Tiros.h"
@@ -191,6 +192,10 @@ void ATirosCharacter::RPC_MulticastEliminated_Implementation()
 	GetCharacterMovement()->DisableMovement();
 	GetCharacterMovement()->StopMovementImmediately();
 	bDisableGameplay = true;
+	if(Combat)
+	{
+		Combat->FireButtonPressed(false);
+	}
 	// Disable collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -217,7 +222,9 @@ void ATirosCharacter::BeginPlay()
 void ATirosCharacter::Destroyed()
 {
 	Super::Destroyed();
-	if(Combat && Combat->EquippedWeapon)
+	ATirosGameMode* TirosGameMode = Cast<ATirosGameMode>(UGameplayStatics::GetGameMode(this));
+	const bool bMatchNotInProgress = TirosGameMode && TirosGameMode->GetMatchState() != MatchState::InProgress;
+	if(Combat && Combat->EquippedWeapon && bMatchNotInProgress)
 	{
 		Combat->EquippedWeapon->Destroy();
 	}

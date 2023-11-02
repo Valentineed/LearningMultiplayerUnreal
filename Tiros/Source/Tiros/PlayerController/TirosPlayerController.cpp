@@ -10,9 +10,11 @@
 #include "Net/UnrealNetwork.h"
 #include "Tiros/Character/TirosCharacter.h"
 #include "Tiros/GameMode/TirosGameMode.h"
+#include "Tiros/GameState/TirosGameState.h"
 #include "Tiros/HUD/Announcement.h"
 #include "Tiros/HUD/CharacterOverlay.h"
 #include "Tiros/HUD/TirosHUD.h"
+#include "Tiros/PlayerState/TirosPlayerState.h"
 #include "Tiros/TirosComponents/CombatComponent.h"
 
 namespace MatchState
@@ -336,7 +338,35 @@ void ATirosPlayerController::HandleCooldown()
 			TirosHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
 			const FString AnnouncementText("New Match Starts In:");
 			TirosHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
-			TirosHUD->Announcement->InfoText->SetText(FText());
+
+			ATirosGameState* TirosGameState = Cast<ATirosGameState>(UGameplayStatics::GetGameState(this));
+			ATirosPlayerState* TirosPlayerState = GetPlayerState<ATirosPlayerState>();
+			if(TirosGameState && TirosPlayerState)
+			{
+				TArray<ATirosPlayerState*> TopPlayers = TirosGameState->TopScoringPlayers;
+				FString InfoTextString;
+				if(TopPlayers.Num() == 0)
+				{
+					InfoTextString = FString("There is no winner.");
+				}
+				else if(TopPlayers.Num() == 1 && TopPlayers[0] == TirosPlayerState)
+				{
+					InfoTextString = FString("You are the winner!");
+				}
+				else if(TopPlayers.Num() == 1)
+				{
+					InfoTextString = FString::Printf(TEXT("Winner: \n%s"), *TopPlayers[0]->GetPlayerName());
+				}
+				else if(TopPlayers.Num() > 1)
+				{
+					InfoTextString = FString("Players tied for the win:\n");
+					for(const auto TiedPlayer : TopPlayers)
+					{
+						InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
+					}
+				}
+				TirosHUD->Announcement->InfoText->SetText(FText::FromString(InfoTextString));
+			}			
 		}
 	}
 	ATirosCharacter* TirosCharacter = Cast<ATirosCharacter>(GetPawn());
