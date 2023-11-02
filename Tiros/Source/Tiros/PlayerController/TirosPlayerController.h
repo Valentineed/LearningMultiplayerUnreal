@@ -14,6 +14,7 @@ class TIROS_API ATirosPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 public:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void SetHUDHeath(float Health, float MaxHealth);
 	void SetHUDScore(float Score);
 	void SetHUDDeaths(int32 Deaths);
@@ -22,12 +23,15 @@ public:
 	void SetHUDMatchCountdown(float CountdownTime);
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaSeconds) override;
+	
 	virtual void ReceivedPlayer() override; // Sync with server clock as soon as possible
-
 	virtual float GetServerTime(); // Sync with server wold clock
+	void OnMatchStateSet(FName State);
+	void HandleMatchHasStarted();
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
+	void PoolInit();
 
 	/**
 	 * Sync time between client and server
@@ -55,6 +59,18 @@ private:
 
 	float MatchTime = 120.f;
 	uint32 CountdownInt = 0;
-	
-	
+
+	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
+	FName MatchState;
+
+	UFUNCTION()
+	void OnRep_MatchState();
+
+	UPROPERTY()
+	class UCharacterOverlay* CharacterOverlay;
+	bool bInitializeCharacterOverlay = false;
+	float HUDHealth;
+	float HUDMaxHealth;
+	float HUDScore;
+	int32 HUDDeaths;	
 };

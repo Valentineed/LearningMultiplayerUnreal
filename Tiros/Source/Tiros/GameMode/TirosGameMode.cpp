@@ -15,7 +15,6 @@ ATirosGameMode::ATirosGameMode()
 	
 }
 
-
 void ATirosGameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -31,6 +30,19 @@ void ATirosGameMode::Tick(float DeltaSeconds)
 		if(CountdownTime <= 0.f)
 		{
 			StartMatch();
+		}
+	}
+}
+
+void ATirosGameMode::OnMatchStateSet()
+{
+	Super::OnMatchStateSet();
+	for(FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		ATirosPlayerController* TirosPlayer = Cast<ATirosPlayerController>(*It);
+		if(TirosPlayer)
+		{
+			TirosPlayer->OnMatchStateSet(MatchState);
 		}
 	}
 }

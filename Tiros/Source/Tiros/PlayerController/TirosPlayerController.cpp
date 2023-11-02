@@ -5,7 +5,10 @@
 
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "GameFramework/GameMode.h"
+#include "Net/UnrealNetwork.h"
 #include "Tiros/Character/TirosCharacter.h"
+#include "Tiros/HUD/Announcement.h"
 #include "Tiros/HUD/CharacterOverlay.h"
 #include "Tiros/HUD/TirosHUD.h"
 
@@ -14,6 +17,16 @@ void ATirosPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	TirosHUD = Cast<ATirosHUD>(GetHUD());
+	if(TirosHUD)
+	{
+		TirosHUD->AddAnnouncement();
+	}
+}
+
+void ATirosPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ATirosPlayerController, MatchState);
 }
 
 void ATirosPlayerController::ReceivedPlayer()
@@ -41,6 +54,7 @@ void ATirosPlayerController::Tick(float DeltaSeconds)
 	SetHUDTime();
 
 	CheckTimeSync(DeltaSeconds);
+	PoolInit();
 }
 
 void ATirosPlayerController::OnPossess(APawn* InPawn)
@@ -63,6 +77,12 @@ void ATirosPlayerController::SetHUDHeath(float Health, float MaxHealth)
 		const FString HealthText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(Health),FMath::CeilToInt(MaxHealth));
 		TirosHUD->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
 	}
+	else
+	{
+		bInitializeCharacterOverlay = true;
+		HUDHealth = Health;
+		HUDMaxHealth = MaxHealth;
+	}
 }
 
 void ATirosPlayerController::SetHUDScore(float Score)
@@ -73,6 +93,11 @@ void ATirosPlayerController::SetHUDScore(float Score)
 		const FString ScoreText = FString::Printf(TEXT("%d"), FMath::FloorToInt(Score));
 		TirosHUD->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));
 	}
+	else
+	{
+		bInitializeCharacterOverlay = true;
+		HUDScore = Score;
+	}
 }
 
 void ATirosPlayerController::SetHUDDeaths(int32 Deaths)
@@ -82,6 +107,11 @@ void ATirosPlayerController::SetHUDDeaths(int32 Deaths)
 	{
 		const FString DeathsText = FString::Printf(TEXT("%d"), Deaths);
 		TirosHUD->CharacterOverlay->DeathsAmount->SetText(FText::FromString(DeathsText));
+	}
+	else
+	{
+		bInitializeCharacterOverlay = true;
+		HUDDeaths = Deaths;
 	}
 }
 
@@ -128,8 +158,25 @@ void ATirosPlayerController::SetHUDTime()
 	CountdownInt = SecondsLeft;
 }
 
+void ATirosPlayerController::PoolInit()
+{
+	if(CharacterOverlay == nullptr)
+	{
+		if(TirosHUD && TirosHUD->CharacterOverlay)
+		{
+			CharacterOverlay = TirosHUD->CharacterOverlay;
+			if(CharacterOverlay)
+			{
+				SetHUDHeath(HUDHealth,HUDMaxHealth);
+				SetHUDScore(HUDScore);
+				SetHUDDeaths(HUDDeaths);
+			}
+		}
+	}
+}
+
 void ATirosPlayerController::RPC_ClientReportServerTime_Implementation(float TimeOfClientRequest,
-	float TimeServerReceivedClientRequest)
+                                                                       float TimeServerReceivedClientRequest)
 {
 	const float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeOfClientRequest;
 	const float CurrentServerTime = TimeServerReceivedClientRequest + (RoundTripTime * 0.5f);
@@ -150,4 +197,34 @@ float ATirosPlayerController::GetServerTime()
 		return GetWorld()->GetTimeSeconds();
 	}
 	return GetWorld()->GetTimeSeconds() + ClientServerDelta;
+}
+
+void ATirosPlayerController::OnMatchStateSet(FName State)
+{
+	MatchState = State;
+	if(MatchState == MatchState::InProgress)
+	{
+		HandleMatchHasStarted();
+	}
+}
+
+void ATirosPlayerController::OnRep_MatchState()
+{
+	if(MatchState == MatchState::InProgress)
+	{
+		HandleMatchHasStarted();
+	}
+}
+
+void ATirosPlayerController::HandleMatchHasStarted()
+{
+	TirosHUD = TirosHUD == nullptr ? Cast<ATirosHUD>(GetHUD()) : TirosHUD;
+	if(TirosHUD)
+	{
+		TirosHUD->AddCharacterOverlay();
+		if(TirosHUD->Announcement)
+		{
+			TirosHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
 }

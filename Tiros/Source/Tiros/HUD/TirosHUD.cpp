@@ -4,12 +4,13 @@
 #include "TirosHUD.h"
 
 #include "CharacterOverlay.h"
+#include "Announcement.h"
 #include "GameFramework/PlayerController.h"
+
 
 void ATirosHUD::BeginPlay()
 {
 	Super::BeginPlay();
-	AddCharacterOverlay();
 }
 
 void ATirosHUD::AddCharacterOverlay()
@@ -18,6 +19,16 @@ void ATirosHUD::AddCharacterOverlay()
 	if (PlayerController && CharacterOverlayClass)
 	{
 		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
+		CharacterOverlay->AddToViewport();
+	}
+}
+
+void ATirosHUD::AddAnnouncement()
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if (PlayerController && AnnouncementClass)
+	{
+		Announcement = CreateWidget<UAnnouncement>(PlayerController, AnnouncementClass);
 		CharacterOverlay->AddToViewport();
 	}
 }
