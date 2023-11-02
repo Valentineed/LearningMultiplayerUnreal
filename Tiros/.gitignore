@@ -75,7 +75,5 @@ Plugins/*/Intermediate/*
 DerivedDataCache/*
 
 #Remove rider link files
-Plugins/*/Developer/*
-Plugins/*/Developer/**
 Plugins/Developer/*
 Plugins/Developer/**
