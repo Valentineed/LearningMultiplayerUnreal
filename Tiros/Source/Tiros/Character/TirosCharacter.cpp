@@ -60,6 +60,7 @@ void ATirosCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 	DOREPLIFETIME_CONDITION(ATirosCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(ATirosCharacter, Health);
+	DOREPLIFETIME(ATirosCharacter, bDisableGameplay);
 }
 
 void ATirosCharacter::PostInitializeComponents()
@@ -189,10 +190,7 @@ void ATirosCharacter::RPC_MulticastEliminated_Implementation()
 	// Disable character movement
 	GetCharacterMovement()->DisableMovement();
 	GetCharacterMovement()->StopMovementImmediately();
-	if(TirosPlayerController)
-	{
-		DisableInput(TirosPlayerController);
-	}
+	bDisableGameplay = true;
 	// Disable collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -216,9 +214,32 @@ void ATirosCharacter::BeginPlay()
 	}
 }
 
+void ATirosCharacter::Destroyed()
+{
+	Super::Destroyed();
+	if(Combat && Combat->EquippedWeapon)
+	{
+		Combat->EquippedWeapon->Destroy();
+	}
+}
+
 void ATirosCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	RotateInPlace(DeltaTime);
+	HideCameraIfCharacterClose();
+	PollInit();
+}
+
+void ATirosCharacter::RotateInPlace(float DeltaTime)
+{
+	if(bDisableGameplay)
+	{
+		bUseControllerRotationYaw = false;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		
+		return;
+	}
 	if(GetLocalRole() > ROLE_SimulatedProxy && IsLocallyControlled())
 	{
 		AimOffset(DeltaTime);		
@@ -228,20 +249,18 @@ void ATirosCharacter::Tick(float DeltaTime)
 		TimeSinceLastMovementReplication += DeltaTime;
 		if(TimeSinceLastMovementReplication > 0.25f)
 		{
-			//TODO maybe is better to put on a function
 			OnRep_ReplicatedMovement();
 		}
 		CalculateAO_Pitch();
 	}
-	HideCameraIfCharacterClose();
-	PollInit();
 }
+
 
 void ATirosCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ThisClass::Jump);
 	PlayerInputComponent->BindAxis("MoveForward", this, &ThisClass::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ThisClass::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &ThisClass::Turn);
@@ -258,6 +277,10 @@ void ATirosCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void ATirosCharacter::MoveForward(float Value)
 {
+	if(bDisableGameplay)
+	{
+		return;
+	}
 	if(Controller != nullptr && Value != 0.f)
 	{
 		const FRotator YawRotation(0.f,Controller->GetControlRotation().Yaw, 0.f);
@@ -268,6 +291,10 @@ void ATirosCharacter::MoveForward(float Value)
 
 void ATirosCharacter::MoveRight(float Value)
 {
+	if(bDisableGameplay)
+	{
+		return;
+	}
 	if(Controller != nullptr && Value != 0.f)
 	{
 		const FRotator YawRotation(0.f,Controller->GetControlRotation().Yaw, 0.f);
@@ -288,6 +315,10 @@ void ATirosCharacter::LookUp(float Value)
 
 void ATirosCharacter::EquipButtonPressed()
 {
+	if(bDisableGameplay)
+	{
+		return;
+	}
 	if(Combat)
 	{
 		if(HasAuthority())
@@ -303,16 +334,28 @@ void ATirosCharacter::EquipButtonPressed()
 
 void ATirosCharacter::CrouchButtonPressed()
 {
+	if(bDisableGameplay)
+	{
+		return;
+	}
 	Crouch();
 }
 
 void ATirosCharacter::CrouchButtonRelease()
 {
+	if(bDisableGameplay)
+	{
+		return;
+	}
 	UnCrouch();
 }
 
 void ATirosCharacter::ReloadButtonPressed()
 {
+	if(bDisableGameplay)
+	{
+		return;
+	}
 	if(Combat)
 	{
 		Combat->Reload();
@@ -321,6 +364,10 @@ void ATirosCharacter::ReloadButtonPressed()
 
 void ATirosCharacter::AimButtonPressed()
 {
+	if(bDisableGameplay)
+	{
+		return;
+	}
 	if(Combat)
 	{
 		Combat->SetAiming(true);
@@ -329,6 +376,10 @@ void ATirosCharacter::AimButtonPressed()
 
 void ATirosCharacter::AimButtonRelease()
 {
+	if(bDisableGameplay)
+	{
+		return;
+	}
 	if(Combat)
 	{
 		Combat->SetAiming(false);
@@ -420,11 +471,19 @@ void ATirosCharacter::SimProxiesTurn()
 
 void ATirosCharacter::Jump()
 {
+	if(bDisableGameplay)
+	{
+		return;
+	}
 	Super::Jump();
 }
 
 void ATirosCharacter::FireButtonPressed()
 {
+	if(bDisableGameplay)
+	{
+		return;
+	}
 	if(Combat)
 	{
 		Combat->FireButtonPressed(true);
@@ -433,6 +492,10 @@ void ATirosCharacter::FireButtonPressed()
 
 void ATirosCharacter::FireButtonRelease()
 {
+	if(bDisableGameplay)
+	{
+		return;
+	}
 	if(Combat)
 	{
 		Combat->FireButtonPressed(false);

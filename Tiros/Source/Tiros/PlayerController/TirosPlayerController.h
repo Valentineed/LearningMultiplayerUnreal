@@ -21,6 +21,7 @@ public:
 	void SetHUDWeaponAmmo(int32 Ammo);
 	void SetHUDCarriedAmmo(int32 Ammo);
 	void SetHUDMatchCountdown(float CountdownTime);
+	void SetHUDAnnouncementCountdown(float CountdownTime);
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaSeconds) override;
 	
@@ -28,6 +29,7 @@ public:
 	virtual float GetServerTime(); // Sync with server wold clock
 	void OnMatchStateSet(FName State);
 	void HandleMatchHasStarted();
+	void HandleCooldown();
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
@@ -53,11 +55,23 @@ protected:
 	float TimeSyncRunningTime = 0.f;
 	
 	void CheckTimeSync(float DeltaSeconds);
+
+	UFUNCTION(Server, Reliable)
+	void RPC_ServerCheckMatchState();
+
+	UFUNCTION(Client, Reliable)
+	void RPC_ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTim);
 private:
 	UPROPERTY()
 	class ATirosHUD* TirosHUD;
+	
+	UPROPERTY()
+	class ATirosGameMode* TirosGameMode;
 
-	float MatchTime = 120.f;
+	float LevelStartingTime = 0.f;
+	float MatchTime = 0.f;
+	float WarmupTime = 0.f;
+	float CooldownTime = 0.f;
 	uint32 CountdownInt = 0;
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
@@ -72,5 +86,5 @@ private:
 	float HUDHealth;
 	float HUDMaxHealth;
 	float HUDScore;
-	int32 HUDDeaths;	
+	int32 HUDDeaths;
 };

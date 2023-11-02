@@ -6,21 +6,25 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "GameFramework/GameMode.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Tiros/Character/TirosCharacter.h"
+#include "Tiros/GameMode/TirosGameMode.h"
 #include "Tiros/HUD/Announcement.h"
 #include "Tiros/HUD/CharacterOverlay.h"
 #include "Tiros/HUD/TirosHUD.h"
+#include "Tiros/TirosComponents/CombatComponent.h"
 
+namespace MatchState
+{
+	const FName Cooldown = FName("Cooldown");
+}
 
 void ATirosPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	TirosHUD = Cast<ATirosHUD>(GetHUD());
-	if(TirosHUD)
-	{
-		TirosHUD->AddAnnouncement();
-	}
+	RPC_ServerCheckMatchState();
 }
 
 void ATirosPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -45,6 +49,37 @@ void ATirosPlayerController::CheckTimeSync(float DeltaSeconds)
 	{
 		RPC_ServerRequestServerTime(GetWorld()->GetTimeSeconds());
 		TimeSyncRunningTime = 0.f;
+	}
+}
+
+void ATirosPlayerController::RPC_ServerCheckMatchState_Implementation()
+{
+	if(const ATirosGameMode* GameMode = Cast<ATirosGameMode>(UGameplayStatics::GetGameMode(this)))
+	{
+		WarmupTime = GameMode->WarmupTime;
+		MatchTime = GameMode->MatchTime;
+		CooldownTime = GameMode->CooldownTime;
+		LevelStartingTime = GameMode->LevelStartingTime;
+		MatchState = GameMode->GetMatchState();
+		RPC_ClientJoinMidgame(MatchState, WarmupTime, MatchTime, CooldownTime, LevelStartingTime);
+		if(TirosHUD && MatchState == MatchState::WaitingToStart)
+		{
+			TirosHUD->AddAnnouncement();
+		}
+	}
+}
+
+void ATirosPlayerController::RPC_ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime)
+{
+	WarmupTime = Warmup;
+	MatchTime = Match;
+	CooldownTime = Cooldown;
+	LevelStartingTime = StartingTime;
+	MatchState = StateOfMatch;
+	OnMatchStateSet(MatchState);
+	if(TirosHUD && MatchState == MatchState::WaitingToStart)
+	{
+		TirosHUD->AddAnnouncement();
 	}
 }
 
@@ -140,6 +175,11 @@ void ATirosPlayerController::SetHUDMatchCountdown(float CountdownTime)
 	TirosHUD = TirosHUD == nullptr ? Cast<ATirosHUD>(GetHUD()) : TirosHUD;
 	if(TirosHUD && TirosHUD->CharacterOverlay && TirosHUD->CharacterOverlay->MatchCountdownText)
 	{
+		if(CooldownTime < 0.f)
+		{
+			TirosHUD->CharacterOverlay->MatchCountdownText->SetText(FText());
+			return;
+		}
 		const int32 Minutes = FMath::FloorToInt(CountdownTime / 60.f);
 		const int32 Seconds = CountdownTime - Minutes * 60.f;
 		
@@ -148,12 +188,60 @@ void ATirosPlayerController::SetHUDMatchCountdown(float CountdownTime)
 	}
 }
 
+void ATirosPlayerController::SetHUDAnnouncementCountdown(float CountdownTime)
+{
+	TirosHUD = TirosHUD == nullptr ? Cast<ATirosHUD>(GetHUD()) : TirosHUD;
+	if(TirosHUD && TirosHUD->Announcement && TirosHUD->Announcement->WarmupTime)
+	{
+		if(CooldownTime < 0.f)
+		{
+			TirosHUD->Announcement->WarmupTime->SetText(FText());
+			return;
+		}
+		const int32 Minutes = FMath::FloorToInt(CountdownTime / 60.f);
+		const int32 Seconds = CountdownTime - Minutes * 60.f;
+		
+		const FString CountdownText = FString::Printf(TEXT("%02d:%02d"),Minutes, Seconds);
+		TirosHUD->Announcement->WarmupTime->SetText(FText::FromString(CountdownText));
+	}
+}
+
 void ATirosPlayerController::SetHUDTime()
 {
-	const uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetServerTime());
+	float TimeLeft = 0.f;
+	if(MatchState == MatchState::WaitingToStart)
+	{
+		TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
+	}
+	else if(MatchState == MatchState::InProgress)
+	{
+		TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+	}
+	else if(MatchState == MatchState::Cooldown)
+	{
+		TimeLeft = CooldownTime + WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+	}
+
+	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
+	if(HasAuthority())
+	{
+		TirosGameMode = TirosGameMode == nullptr ? Cast<ATirosGameMode>(UGameplayStatics::GetGameMode(this)) : TirosGameMode;
+		if(TirosGameMode)
+		{
+			SecondsLeft = FMath::CeilToInt(TirosGameMode->GetCountdownTime() + LevelStartingTime);
+		}
+	}
+	
 	if(CountdownInt != SecondsLeft)
 	{
-		SetHUDMatchCountdown(MatchTime - GetServerTime());
+		if(MatchState == MatchState::WaitingToStart || MatchState == MatchState::Cooldown)
+		{
+			SetHUDAnnouncementCountdown(TimeLeft);
+		}
+		if(MatchState == MatchState::InProgress)
+		{
+			SetHUDMatchCountdown(TimeLeft);
+		}
 	}		
 	CountdownInt = SecondsLeft;
 }
@@ -206,6 +294,10 @@ void ATirosPlayerController::OnMatchStateSet(FName State)
 	{
 		HandleMatchHasStarted();
 	}
+	else if(MatchState == MatchState::Cooldown)
+	{
+		HandleCooldown();
+	}
 }
 
 void ATirosPlayerController::OnRep_MatchState()
@@ -213,6 +305,10 @@ void ATirosPlayerController::OnRep_MatchState()
 	if(MatchState == MatchState::InProgress)
 	{
 		HandleMatchHasStarted();
+	}
+	else if(MatchState == MatchState::Cooldown)
+	{
+		HandleCooldown();
 	}
 }
 
@@ -226,5 +322,27 @@ void ATirosPlayerController::HandleMatchHasStarted()
 		{
 			TirosHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
 		}
+	}
+}
+
+void ATirosPlayerController::HandleCooldown()
+{
+	TirosHUD = TirosHUD == nullptr ? Cast<ATirosHUD>(GetHUD()) : TirosHUD;
+	if(TirosHUD)
+	{
+		TirosHUD->CharacterOverlay->RemoveFromParent();
+		if(TirosHUD->Announcement && TirosHUD->Announcement->AnnouncementText && TirosHUD->Announcement->InfoText)
+		{
+			TirosHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
+			const FString AnnouncementText("New Match Starts In:");
+			TirosHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
+			TirosHUD->Announcement->InfoText->SetText(FText());
+		}
+	}
+	ATirosCharacter* TirosCharacter = Cast<ATirosCharacter>(GetPawn());
+	if(TirosCharacter && TirosCharacter->GetCombat())
+	{
+		TirosCharacter->bDisableGameplay = true;
+		TirosCharacter->GetCombat()->FireButtonPressed(false);
 	}
 }

@@ -79,6 +79,6 @@ void UTirosAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	}
 
 	bUseFabrik = TirosCharacter->GetCombatState() != ECombatState::ECS_Reloading;
-	bUseAimOffsets = TirosCharacter->GetCombatState() != ECombatState::ECS_Reloading;
-	bTransformRightHand = TirosCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+	bUseAimOffsets = TirosCharacter->GetCombatState() != ECombatState::ECS_Reloading && !TirosCharacter->GetDisableGameplay();
+	bTransformRightHand = TirosCharacter->GetCombatState() != ECombatState::ECS_Reloading && !TirosCharacter->GetDisableGameplay();
 }
