@@ -240,7 +240,7 @@ void ATirosPlayerController::SetHUDTime()
 		{
 			SetHUDAnnouncementCountdown(TimeLeft);
 		}
-		if(MatchState == MatchState::InProgress)
+		else if(MatchState == MatchState::InProgress)
 		{
 			SetHUDMatchCountdown(TimeLeft);
 		}
