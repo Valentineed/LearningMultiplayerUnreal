@@ -14,7 +14,6 @@
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
 
-#define TRACE_LENGHT 80000.f;
 
 // Sets default values for this component's properties
 UCombatComponent::UCombatComponent()
@@ -139,6 +138,10 @@ void UCombatComponent::InitializeCarriedAmmo()
 {
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingAssaultRifleAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol, StartingPistolAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SubmachineGun, StartingSMGAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Shotgun, StartingShotgunAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SniperRifle, StartingSniperAmmo);
 }
 
 void UCombatComponent::RPC_ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
