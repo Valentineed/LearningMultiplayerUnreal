@@ -22,12 +22,15 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+	void UpdateCarriedAmmo();
 	void Reload();
 
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
 
 	void FireButtonPressed(bool bPressed);
+
+	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 
 protected:
 	virtual void BeginPlay() override;

@@ -43,7 +43,6 @@ void AWeapon::BeginPlay()
 	}
 	if(HasAuthority())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Hello"));
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		AreaSphere->SetCollisionResponseToChannel(ECC_Pawn,ECR_Overlap);
 		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereOverlap);
