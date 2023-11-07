@@ -38,6 +38,7 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
+	void UpdateHUDHealth();
 protected:
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;
@@ -60,7 +61,7 @@ protected:
 	void PlayHitReactMontage();
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
-	void UpdateHUDHealth();
+
 	// Pool for any revelant class and initialize your HUD
 	void PollInit();
 	void RotateInPlace(float DeltaTime);
@@ -133,7 +134,7 @@ private:
 	float Health = 100.f;
 
 	UFUNCTION()
-	void OnRep_Health();
+	void OnRep_Health(float LastHealth);
 
 	UPROPERTY()
 	class ATirosPlayerController* TirosPlayerController;
@@ -185,8 +186,10 @@ public:
 	FORCEINLINE bool ShouldRotateRootBone() const {return bRotateRootBone;} 
 	FORCEINLINE bool IsEliminated() const {return bEliminated;} 
 	FORCEINLINE float GetHealth() const {return Health;}
+	FORCEINLINE void SetHealth(const float Amount) { Health = Amount;}
 	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombat() const {return Combat;}
 	FORCEINLINE bool GetDisableGameplay() const {return bDisableGameplay;}
+	FORCEINLINE UBuffComponent* GetBuff() const {return Buff;}
 };

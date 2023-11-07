@@ -78,6 +78,10 @@ void ATirosCharacter::PostInitializeComponents()
 	if(Buff)
 	{
 		Buff->Character = this;
+		if(UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
+		{
+			Buff->SetInitialSpeed(MovementComponent->MaxWalkSpeed,MovementComponent->MaxWalkSpeedCrouched);
+		}
 	}
 }
 
@@ -603,10 +607,13 @@ float ATirosCharacter::CalculateSpeed()
 	return Velocity.Size();
 }
 
-void ATirosCharacter::OnRep_Health()
+void ATirosCharacter::OnRep_Health(float LastHealth)
 {
 	UpdateHUDHealth();
-	PlayHitReactMontage();
+	if(Health < LastHealth)
+	{
+		PlayHitReactMontage();
+	}
 }
 
 void ATirosCharacter::UpdateHUDHealth()

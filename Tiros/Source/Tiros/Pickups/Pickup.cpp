@@ -3,6 +3,8 @@
 
 #include "Pickup.h"
 
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
@@ -13,6 +15,9 @@ APickup::APickup()
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 
+	PickupEffectComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("PickupEffectComponent"));
+	PickupEffectComponent->SetupAttachment(RootComponent);
+	
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
 	OverlapSphere = CreateDefaultSubobject<USphereComponent>(TEXT("OverlapSphere"));
@@ -62,6 +67,10 @@ void APickup::Destroyed()
 	if(PickupSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, PickupSound, GetActorLocation());
+	}
+	if(PickupEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, PickupEffect, GetActorLocation(), GetActorRotation());
 	}
 }
 

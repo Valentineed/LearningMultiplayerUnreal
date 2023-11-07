@@ -15,15 +15,38 @@ class TIROS_API UBuffComponent : public UActorComponent
 public:	
 	UBuffComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	
 	friend class ATirosCharacter;
-
+	void Heal(float HealAmount, float HealingTime);
+	void BuffSpeed(float BuffBaseSpeed, float BuffCrouchSpeed, float BuffTime);
+	void SetInitialSpeed(float BaseSpeed, float CrouchSpeed);
 protected:
 	virtual void BeginPlay() override;
+	void HealRampUp(float DeltaTime);
 private:
-	
 	UPROPERTY()
 	ATirosCharacter* Character;
+
+	/**
+	 *  Heal Buff
+	 */
+	bool bHealing = false;
+	float HealingRate = 0.f;
+	float AmountToHeal = 0.f;
+
+	/**
+	 *  Speed Buff
+	 */
+
+	FTimerHandle SpeedBuffTimer;
+	void ResetSpeeds();
+	float InitialBaseSpeed;
+	float InitialCrouchSpeed;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void RPC_MulticastSpeedBuff(float BaseSpeed, float CrouchSpeed);
+
+	void SetCharacterSpeed(float BaseSpeed, float CrouchSpeed);
+	
 public:	
 		
 };
