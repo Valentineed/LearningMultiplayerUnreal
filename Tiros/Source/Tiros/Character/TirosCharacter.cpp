@@ -16,6 +16,7 @@
 #include "Tiros/PlayerController/TirosPlayerController.h"
 #include "Tiros/PlayerState/TirosPlayerState.h"
 #include "Tiros/TirosComponents/CombatComponent.h"
+#include "Tiros/TirosComponents/BuffComponent.h"
 #include "Tiros/Weapon/Weapon.h"
 
 
@@ -41,6 +42,9 @@ ATirosCharacter::ATirosCharacter()
 	
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
+	
+	Buff = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
+	Buff->SetIsReplicated(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
@@ -70,6 +74,10 @@ void ATirosCharacter::PostInitializeComponents()
 	if(Combat)
 	{
 		Combat->Character = this;
+	}
+	if(Buff)
+	{
+		Buff->Character = this;
 	}
 }
 
