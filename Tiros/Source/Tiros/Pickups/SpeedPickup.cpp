@@ -6,17 +6,11 @@
 #include "Tiros/Character/TirosCharacter.h"
 #include "Tiros/TirosComponents/BuffComponent.h"
 
-ASpeedPickup::ASpeedPickup()
-{
-	bReplicates = true;
-}
-
 void ASpeedPickup::OnSphereOverlap(UPrimitiveComponent* OverlapComponent, AActor* OtherActor,
                                    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	Super::OnSphereOverlap(OverlapComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
-	Super::OnSphereOverlap(OverlapComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
-	if(ATirosCharacter* TirosCharacter = Cast<ATirosCharacter>(OtherActor))
+	if(const ATirosCharacter* TirosCharacter = Cast<ATirosCharacter>(OtherActor))
 	{
 		if(UBuffComponent* Buff = TirosCharacter->GetBuff())
 		{

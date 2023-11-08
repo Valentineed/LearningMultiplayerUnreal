@@ -122,6 +122,24 @@ void ATirosPlayerController::SetHUDHeath(float Health, float MaxHealth)
 	}
 }
 
+void ATirosPlayerController::SetHUDShield(float Shield, float MaxShield)
+{
+	TirosHUD = TirosHUD == nullptr ? Cast<ATirosHUD>(GetHUD()) : TirosHUD;
+	if(TirosHUD && TirosHUD->CharacterOverlay && TirosHUD->CharacterOverlay->ShieldBar && TirosHUD->CharacterOverlay->ShieldText)
+	{
+		const float ShieldPercent = Shield / MaxShield;
+		TirosHUD->CharacterOverlay->ShieldBar->SetPercent(ShieldPercent);
+		const FString HealthText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(Shield),FMath::CeilToInt(MaxShield));
+		TirosHUD->CharacterOverlay->ShieldText->SetText(FText::FromString(HealthText));
+	}
+	else
+	{
+		bInitializeCharacterOverlay = true;
+		HUDShield = Shield;
+		HUDMaxShield = MaxShield;
+	}
+}
+
 void ATirosPlayerController::SetHUDScore(float Score)
 {
 	TirosHUD = TirosHUD == nullptr ? Cast<ATirosHUD>(GetHUD()) : TirosHUD;
@@ -225,15 +243,6 @@ void ATirosPlayerController::SetHUDTime()
 	}
 
 	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
-	if(HasAuthority())
-	{
-		TirosGameMode = TirosGameMode == nullptr ? Cast<ATirosGameMode>(UGameplayStatics::GetGameMode(this)) : TirosGameMode;
-		if(TirosGameMode)
-		{
-			SecondsLeft = FMath::CeilToInt(TirosGameMode->GetCountdownTime() + LevelStartingTime);
-		}
-	}
-	
 	if(CountdownInt != SecondsLeft)
 	{
 		if(MatchState == MatchState::WaitingToStart || MatchState == MatchState::Cooldown)
@@ -258,6 +267,7 @@ void ATirosPlayerController::PoolInit()
 			if(CharacterOverlay)
 			{
 				SetHUDHeath(HUDHealth,HUDMaxHealth);
+				SetHUDShield(HUDShield,HUDMaxShield);
 				SetHUDScore(HUDScore);
 				SetHUDDeaths(HUDDeaths);
 			}

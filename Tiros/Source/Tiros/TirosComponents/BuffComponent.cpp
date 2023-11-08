@@ -39,6 +39,11 @@ void UBuffComponent::SetInitialSpeed(float BaseSpeed, float CrouchSpeed)
 	InitialCrouchSpeed = CrouchSpeed;
 }
 
+void UBuffComponent::SetInitialJumpVelocity(float Velocity)
+{
+	InitialJumpVelocity = Velocity;
+}
+
 void UBuffComponent::BuffSpeed(float BuffBaseSpeed, float BuffCrouchSpeed, float BuffTime)
 {
 	if(Character == nullptr || Character->IsEliminated())
@@ -75,6 +80,43 @@ void UBuffComponent::RPC_MulticastSpeedBuff_Implementation(float BaseSpeed, floa
 {
 	SetCharacterSpeed(BaseSpeed, CrouchSpeed);
 }
+
+void UBuffComponent::BuffJump(float BuffJumpVelocity, float BuffTime)
+{
+	if(Character == nullptr || Character->IsEliminated())
+	{
+		return;
+	}
+	Character->GetWorldTimerManager().SetTimer(JumpBuffTimer, this,&UBuffComponent::ResetJump,BuffTime);
+	
+	SetCharacterJumpVelocity(BuffJumpVelocity);
+	RPC_MulticastJumpBuff(BuffJumpVelocity);
+}
+
+void UBuffComponent::ResetJump()
+{
+	SetCharacterJumpVelocity(InitialJumpVelocity);
+	RPC_MulticastJumpBuff(InitialJumpVelocity);
+}
+
+void UBuffComponent::RPC_MulticastJumpBuff_Implementation(float JumpVelocity)
+{
+	SetCharacterJumpVelocity(JumpVelocity);
+}
+
+void UBuffComponent::SetCharacterJumpVelocity(float Velocity)
+{
+	if(Character == nullptr || Character->IsEliminated())
+	{
+		return;
+	}
+	
+	if(UCharacterMovementComponent* MovementComponent =  Character->GetCharacterMovement())
+	{
+		MovementComponent->JumpZVelocity = Velocity;
+	}
+}
+
 
 void UBuffComponent::HealRampUp(float DeltaTime)
 {

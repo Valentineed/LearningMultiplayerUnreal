@@ -18,7 +18,9 @@ public:
 	friend class ATirosCharacter;
 	void Heal(float HealAmount, float HealingTime);
 	void BuffSpeed(float BuffBaseSpeed, float BuffCrouchSpeed, float BuffTime);
+	void BuffJump(float BuffJumpVelocity, float BuffTime);
 	void SetInitialSpeed(float BaseSpeed, float CrouchSpeed);
+	void SetInitialJumpVelocity(float Velocity);
 protected:
 	virtual void BeginPlay() override;
 	void HealRampUp(float DeltaTime);
@@ -46,7 +48,16 @@ private:
 	void RPC_MulticastSpeedBuff(float BaseSpeed, float CrouchSpeed);
 
 	void SetCharacterSpeed(float BaseSpeed, float CrouchSpeed);
+
+	/**
+	 * Jump buff
+	 */
+	FTimerHandle JumpBuffTimer;
+	void ResetJump();
+	float InitialJumpVelocity;
+	UFUNCTION(NetMulticast, Reliable)
+	void RPC_MulticastJumpBuff(float JumpVelocity);
+	void SetCharacterJumpVelocity(float Velocity);
 	
-public:	
 		
 };

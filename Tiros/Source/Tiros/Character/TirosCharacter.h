@@ -39,6 +39,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
 	void UpdateHUDHealth();
+	void UpdateHUDShield();
 protected:
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;
@@ -136,6 +137,18 @@ private:
 	UFUNCTION()
 	void OnRep_Health(float LastHealth);
 
+	/**
+	 * Player shield
+	 */
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxShield = 100.f;
+	
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, Category = "Player Stats")
+	float Shield = 100.f;
+
+	UFUNCTION()
+	void OnRep_Shield(float LastShield);
+	
 	UPROPERTY()
 	class ATirosPlayerController* TirosPlayerController;
 

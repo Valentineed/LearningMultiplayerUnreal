@@ -8,15 +8,11 @@
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
-#include "Tiros/Weapon/WeaponTypes.h"
 
 APickup::APickup()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
-
-	PickupEffectComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("PickupEffectComponent"));
-	PickupEffectComponent->SetupAttachment(RootComponent);
 	
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
@@ -31,7 +27,10 @@ APickup::APickup()
 	PickupMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	PickupMesh->SetRelativeScale3D(FVector(5.f,5.f,5.f));
 	PickupMesh->SetRenderCustomDepth(true);
-	PickupMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);
+	PickupMesh->SetCustomDepthStencilValue(250);
+
+	PickupEffectComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("PickupEffectComponent"));
+	PickupEffectComponent->SetupAttachment(RootComponent);
 }
 
 void APickup::BeginPlay()

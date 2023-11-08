@@ -65,6 +65,7 @@ void ATirosCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 	DOREPLIFETIME_CONDITION(ATirosCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(ATirosCharacter, Health);
+	DOREPLIFETIME(ATirosCharacter, Shield);
 	DOREPLIFETIME(ATirosCharacter, bDisableGameplay);
 }
 
@@ -78,9 +79,10 @@ void ATirosCharacter::PostInitializeComponents()
 	if(Buff)
 	{
 		Buff->Character = this;
-		if(UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
+		if(const UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
 		{
 			Buff->SetInitialSpeed(MovementComponent->MaxWalkSpeed,MovementComponent->MaxWalkSpeedCrouched);
+			Buff->SetInitialJumpVelocity(MovementComponent->JumpZVelocity);
 		}
 	}
 }
@@ -167,8 +169,17 @@ void ATirosCharacter::PlayHitReactMontage()
 void ATirosCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
 	AController* InstigatorController, AActor* DamageCauser)
 {
-	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
-	UpdateHUDHealth();
+	if(Shield <= 0.f)
+	{
+		Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+		UpdateHUDHealth();
+	}
+	else
+	{
+		Shield = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
+		UpdateHUDShield();
+	}
+	
 	PlayHitReactMontage();
 	if(Health != 0.f)
 	{
@@ -616,12 +627,30 @@ void ATirosCharacter::OnRep_Health(float LastHealth)
 	}
 }
 
+void ATirosCharacter::OnRep_Shield(float LastShield)
+{
+	UpdateHUDShield();
+	if(Shield < LastShield)
+	{
+		PlayHitReactMontage();
+	}
+}
+
 void ATirosCharacter::UpdateHUDHealth()
 {
 	TirosPlayerController = TirosPlayerController == nullptr ? Cast<ATirosPlayerController>(Controller) : TirosPlayerController;
 	if(TirosPlayerController)
 	{
 		TirosPlayerController->SetHUDHeath(Health, MaxHealth);
+	}
+}
+
+void ATirosCharacter::UpdateHUDShield()
+{
+	TirosPlayerController = TirosPlayerController == nullptr ? Cast<ATirosPlayerController>(Controller) : TirosPlayerController;
+	if(TirosPlayerController)
+	{
+		TirosPlayerController->SetHUDShield(Shield, MaxShield);
 	}
 }
 
