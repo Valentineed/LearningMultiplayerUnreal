@@ -116,7 +116,7 @@ void ATirosPlayerController::SetHUDHeath(float Health, float MaxHealth)
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true;
+		bInitializeHealth = true;
 		HUDHealth = Health;
 		HUDMaxHealth = MaxHealth;
 	}
@@ -134,7 +134,7 @@ void ATirosPlayerController::SetHUDShield(float Shield, float MaxShield)
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true;
+		bInitializeShield = true;
 		HUDShield = Shield;
 		HUDMaxShield = MaxShield;
 	}
@@ -150,7 +150,7 @@ void ATirosPlayerController::SetHUDScore(float Score)
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true;
+		bInitializeScore = true;
 		HUDScore = Score;
 	}
 }
@@ -165,7 +165,7 @@ void ATirosPlayerController::SetHUDDeaths(int32 Deaths)
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true;
+		bInitializeDeath = true;
 		HUDDeaths = Deaths;
 	}
 }
@@ -266,10 +266,10 @@ void ATirosPlayerController::PoolInit()
 			CharacterOverlay = TirosHUD->CharacterOverlay;
 			if(CharacterOverlay)
 			{
-				SetHUDHeath(HUDHealth,HUDMaxHealth);
-				SetHUDShield(HUDShield,HUDMaxShield);
-				SetHUDScore(HUDScore);
-				SetHUDDeaths(HUDDeaths);
+				if(bInitializeHealth) SetHUDHeath(HUDHealth,HUDMaxHealth);
+				if(bInitializeShield) SetHUDShield(HUDShield,HUDMaxShield);
+				if(bInitializeScore) SetHUDScore(HUDScore);
+				if(bInitializeDeath) SetHUDDeaths(HUDDeaths);
 			}
 		}
 	}

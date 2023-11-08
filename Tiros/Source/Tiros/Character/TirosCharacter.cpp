@@ -169,16 +169,29 @@ void ATirosCharacter::PlayHitReactMontage()
 void ATirosCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
 	AController* InstigatorController, AActor* DamageCauser)
 {
-	if(Shield <= 0.f)
+	if(bEliminated)
 	{
-		Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
-		UpdateHUDHealth();
+		return;
 	}
-	else
+
+	float DamageToHealth = Damage;
+	if(Shield > 0.f)
 	{
-		Shield = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
-		UpdateHUDShield();
+		if(Shield >= Damage)
+		{
+			Shield = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
+			DamageToHealth = 0.f;
+		}
+		else
+		{
+			DamageToHealth = FMath::Clamp(DamageToHealth - Shield, 0.f, Damage);
+			Shield = 0.f;
+		}
 	}
+	Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth);
+	
+	UpdateHUDShield();
+	UpdateHUDHealth();
 	
 	PlayHitReactMontage();
 	if(Health != 0.f)
@@ -259,6 +272,7 @@ void ATirosCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	UpdateHUDHealth();
+	UpdateHUDShield();
 	if(HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ATirosCharacter::ReceiveDamage);
