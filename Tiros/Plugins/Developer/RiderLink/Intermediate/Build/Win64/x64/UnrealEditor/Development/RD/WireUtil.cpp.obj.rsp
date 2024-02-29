@@ -1,8 +1,8 @@
-"D:\Learning\LearningMultiplayerUnreal\Tiros\Plugins\Developer\RiderLink\Source\RD\src\rd_framework_cpp\src\main\wire\WireUtil.cpp"
-/FI"D:\Learning\LearningMultiplayerUnreal\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RD\Definitions.h"
-/Fo"D:\Learning\LearningMultiplayerUnreal\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RD\WireUtil.cpp.obj"
-/sourceDependencies "D:\Learning\LearningMultiplayerUnreal\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RD\WireUtil.cpp.dep.json"
-@"D:\Learning\LearningMultiplayerUnreal\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RD\RD.Shared.rsp"
+"D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Source\RD\src\rd_framework_cpp\src\main\wire\WireUtil.cpp"
+/FI"D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RD\Definitions.h"
+/Fo"D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RD\WireUtil.cpp.obj"
+/sourceDependencies "D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RD\WireUtil.cpp.dep.json"
+@"D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RD\RD.Shared.rsp"
 /Zc:inline
 /nologo
 /Oi

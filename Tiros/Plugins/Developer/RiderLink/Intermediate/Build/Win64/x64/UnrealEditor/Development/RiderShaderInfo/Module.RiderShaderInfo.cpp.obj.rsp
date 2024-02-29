@@ -1,8 +1,8 @@
-"D:\Learning\LearningMultiplayerUnreal\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RiderShaderInfo\Module.RiderShaderInfo.cpp"
-/FI"D:\Learning\LearningMultiplayerUnreal\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RiderShaderInfo\Definitions.h"
-/Fo"D:\Learning\LearningMultiplayerUnreal\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RiderShaderInfo\Module.RiderShaderInfo.cpp.obj"
-/sourceDependencies "D:\Learning\LearningMultiplayerUnreal\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RiderShaderInfo\Module.RiderShaderInfo.cpp.dep.json"
-@"D:\Learning\LearningMultiplayerUnreal\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RiderShaderInfo\RiderShaderInfo.Shared.rsp"
+"D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RiderShaderInfo\Module.RiderShaderInfo.cpp"
+/FI"D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RiderShaderInfo\Definitions.h"
+/Fo"D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RiderShaderInfo\Module.RiderShaderInfo.cpp.obj"
+/sourceDependencies "D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RiderShaderInfo\Module.RiderShaderInfo.cpp.dep.json"
+@"D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RiderShaderInfo\RiderShaderInfo.Shared.rsp"
 /Zc:inline
 /nologo
 /Oi
