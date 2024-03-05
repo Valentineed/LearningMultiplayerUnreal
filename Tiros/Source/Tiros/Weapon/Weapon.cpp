@@ -95,10 +95,6 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlapComponent, AActor* 
 	}
 }
 
-void AWeapon::OnRep_Ammo()
-{
-	SetHUDAmmo();
-}
 
 void AWeapon::SetHUDAmmo()
 {
@@ -112,6 +108,33 @@ void AWeapon::SetHUDAmmo()
 		}
 	}
 }
+void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
+{
+	if (HasAuthority()) return;
+	Ammo = ServerAmmo;
+	--Sequence;
+	Ammo -= Sequence;
+	SetHUDAmmo();
+}
+
+void AWeapon::AddAmmo(int32 AmmoToAdd)
+{
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+	SetHUDAmmo();
+	ClientAddAmmo(AmmoToAdd);
+}
+
+void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
+{
+	if (HasAuthority()) return;
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+	TirosOwnerCharacter = TirosOwnerCharacter == nullptr ? Cast<ATirosCharacter>(GetOwner()) : TirosOwnerCharacter;
+	/*if (TirosOwnerCharacter && TirosOwnerCharacter->GetCombat() && IsFull())
+	{
+		TirosOwnerCharacter->GetCombat()->JumpToShotgunEnd();
+	}*/
+	SetHUDAmmo();
+}
 
 void AWeapon::OnRep_Owner()
 {
@@ -123,7 +146,11 @@ void AWeapon::OnRep_Owner()
 	}
 	else
 	{
-		SetHUDAmmo();
+		TirosOwnerCharacter = TirosOwnerCharacter == nullptr ? Cast<ATirosCharacter>(Owner) : TirosOwnerCharacter;
+		if (TirosOwnerCharacter && TirosOwnerCharacter->GetEquippedWeapon() && TirosOwnerCharacter->GetEquippedWeapon() == this)
+		{
+			SetHUDAmmo();
+		}
 	}
 }
 
@@ -131,6 +158,14 @@ void AWeapon::SpendRound()
 {
 	Ammo = FMath::Clamp(Ammo -1, 0, MagCapacity);
 	SetHUDAmmo();
+	if (HasAuthority())
+	{
+		ClientUpdateAmmo(Ammo);
+	}
+	else
+	{
+		++Sequence;
+	}
 }
 
 void AWeapon::SetWeaponState(EWeaponState State)
@@ -175,6 +210,11 @@ bool AWeapon::IsEmpty()
 	return Ammo <= 0;
 }
 
+bool AWeapon::IsFull()
+{
+	return Ammo == MagCapacity;
+}
+
 void AWeapon::OnRep_WeaponState()
 {
 	switch (WeaponState)
@@ -202,7 +242,7 @@ void AWeapon::OnRep_WeaponState()
 		WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
 		WeaponMesh->MarkRenderStateDirty();
 		EnableCustomDepth(true);
-		break;;
+		break;
 	}
 }
 
@@ -246,9 +286,6 @@ void AWeapon::Dropped()
 	TirosOwnerController = nullptr;
 }
 
-void AWeapon::AddAmmo(int32 AmmoToAdd)
-{
-	Ammo = FMath::Clamp(Ammo + AmmoToAdd,0, MagCapacity);
-	SetHUDAmmo();
-}
+
+
 

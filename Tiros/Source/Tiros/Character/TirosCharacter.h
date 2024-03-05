@@ -27,6 +27,7 @@ public:
 	void PlayFireMontage(bool bAiming);
 	void PlayReloadMontage();
 	void PlayEliminatedMontage();
+	void PlayThrowGrenadeMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 
 	void Eliminated();
@@ -60,6 +61,8 @@ protected:
 	void FireButtonPressed();
 	void FireButtonRelease();
 	void PlayHitReactMontage();
+	void GrenadeButtonPressed();
+	
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 
@@ -110,6 +113,9 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* EliminatedMontage;
+	
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class UAnimMontage* ThrowGrenadeMontage;
 
 
 	void HideCameraIfCharacterClose();
@@ -185,6 +191,12 @@ private:
 
 	UPROPERTY()
 	class ATirosPlayerState* TirosPlayerState;
+
+	/**
+	 * Grenade
+	 */
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* AttachedGrenade;
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);

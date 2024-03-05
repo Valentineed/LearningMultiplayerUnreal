@@ -57,6 +57,9 @@ ATirosCharacter::ATirosCharacter()
 	MinNetUpdateFrequency = 33.f;
 
 	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
+	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Attached Grenade"));
+	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ATirosCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -151,6 +154,15 @@ void ATirosCharacter::PlayEliminatedMontage()
 	}
 }
 
+void ATirosCharacter::PlayThrowGrenadeMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && ThrowGrenadeMontage)
+	{
+		AnimInstance->Montage_Play(ThrowGrenadeMontage);
+	}
+}
+
 void ATirosCharacter::PlayHitReactMontage()
 {
 	if(Combat == nullptr || Combat->EquippedWeapon == nullptr)
@@ -166,8 +178,16 @@ void ATirosCharacter::PlayHitReactMontage()
 	}
 }
 
+void ATirosCharacter::GrenadeButtonPressed()
+{
+	if(Combat)
+	{
+		Combat->ThrowGrenade();
+	}
+}
+
 void ATirosCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
-	AController* InstigatorController, AActor* DamageCauser)
+                                    AController* InstigatorController, AActor* DamageCauser)
 {
 	if(bEliminated)
 	{
@@ -340,6 +360,7 @@ void ATirosCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ATirosCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ATirosCharacter::FireButtonRelease);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ATirosCharacter::ReloadButtonPressed);
+	PlayerInputComponent->BindAction("ThrowGrenade", IE_Pressed, this, &ATirosCharacter::GrenadeButtonPressed);
 }
 
 void ATirosCharacter::MoveForward(float Value)

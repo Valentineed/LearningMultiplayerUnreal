@@ -22,16 +22,19 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
-	void UpdateCarriedAmmo();
 	void Reload();
 
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
+	
+	UFUNCTION(BlueprintCallable)
+	void ThrowGrenadeFinished();
 
 	void FireButtonPressed(bool bPressed);
 
 	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 
+	
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
@@ -58,6 +61,18 @@ protected:
 
 	void HandleReload();
 	int32 AmountToReload();
+
+	void ThrowGrenade();
+
+	UFUNCTION(Server, Reliable)
+	void RPC_ServerThrowGrenade();
+	
+	void DropEquippedWeapon();
+	void AttachActorToRightHand(AActor* ActorToAttach);
+	void AttachActorToLeftHand(AActor* ActorToAttach);
+	void UpdateCarriedAmmo();
+	void PlayEquipWeaponSound();
+	void ReloadEmptyWeapon();
 private:
 
 	UPROPERTY()

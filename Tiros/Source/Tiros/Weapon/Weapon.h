@@ -111,16 +111,23 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass;
 
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	UPROPERTY(EditAnywhere)
 	int32 Ammo;
 	
-	UFUNCTION()
-	void OnRep_Ammo();
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(int32 ServerAmmo);
 
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int32 AmmoToAdd);
+	
 	void SpendRound();
 	
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
+	
+	// The number of unprocessed server requests for Ammo.
+	// Incremented in SpendRound, decremented in ClientUpdateAmmo.
+	int32 Sequence = 0;
 
 	UPROPERTY()
 	class ATirosCharacter* TirosOwnerCharacter;
@@ -137,6 +144,7 @@ public:
 	FORCEINLINE float GetZoomedFOV()const{return ZoomedFOV;}
 	FORCEINLINE float GetZoomInterpSpeed()const{return ZoomInterpSpeed;}
 	bool IsEmpty();
+	bool IsFull();
 	FORCEINLINE EWeaponType GetWeaponType() const {return WeaponType;}
 	FORCEINLINE int32 GetAmmo() const {return Ammo;}
 	FORCEINLINE int32 GetMagCapacity() const {return MagCapacity;}
