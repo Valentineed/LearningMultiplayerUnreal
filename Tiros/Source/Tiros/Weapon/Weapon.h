@@ -111,14 +111,11 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
 	int32 Ammo;
 	
-	UFUNCTION(Client, Reliable)
-	void ClientUpdateAmmo(int32 ServerAmmo);
-
-	UFUNCTION(Client, Reliable)
-	void ClientAddAmmo(int32 AmmoToAdd);
+	UFUNCTION()
+	void OnRep_Ammo();
 	
 	void SpendRound();
 	
@@ -149,4 +146,3 @@ public:
 	FORCEINLINE int32 GetAmmo() const {return Ammo;}
 	FORCEINLINE int32 GetMagCapacity() const {return MagCapacity;}
 };
-

@@ -108,31 +108,15 @@ void AWeapon::SetHUDAmmo()
 		}
 	}
 }
-void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
+
+void AWeapon::OnRep_Ammo()
 {
-	if (HasAuthority()) return;
-	Ammo = ServerAmmo;
-	--Sequence;
-	Ammo -= Sequence;
 	SetHUDAmmo();
 }
 
 void AWeapon::AddAmmo(int32 AmmoToAdd)
 {
 	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
-	SetHUDAmmo();
-	ClientAddAmmo(AmmoToAdd);
-}
-
-void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
-{
-	if (HasAuthority()) return;
-	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
-	TirosOwnerCharacter = TirosOwnerCharacter == nullptr ? Cast<ATirosCharacter>(GetOwner()) : TirosOwnerCharacter;
-	/*if (TirosOwnerCharacter && TirosOwnerCharacter->GetCombat() && IsFull())
-	{
-		TirosOwnerCharacter->GetCombat()->JumpToShotgunEnd();
-	}*/
 	SetHUDAmmo();
 }
 
@@ -160,7 +144,6 @@ void AWeapon::SpendRound()
 	SetHUDAmmo();
 	if (HasAuthority())
 	{
-		ClientUpdateAmmo(Ammo);
 	}
 	else
 	{
@@ -285,7 +268,3 @@ void AWeapon::Dropped()
 	TirosOwnerCharacter = nullptr;
 	TirosOwnerController = nullptr;
 }
-
-
-
-
