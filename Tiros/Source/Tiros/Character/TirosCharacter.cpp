@@ -413,14 +413,7 @@ void ATirosCharacter::EquipButtonPressed()
 	}
 	if(Combat)
 	{
-		if(HasAuthority())
-		{
-			Combat->EquipWeapon(OverlappingWeapon);
-		}
-		else
-		{
-			RPC_ServerEquipButtonPressed();
-		}
+		RPC_ServerEquipButtonPressed();
 	}
 }
 
