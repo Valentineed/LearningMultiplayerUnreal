@@ -220,4 +220,5 @@ public:
 	FORCEINLINE UCombatComponent* GetCombat() const {return Combat;}
 	FORCEINLINE bool GetDisableGameplay() const {return bDisableGameplay;}
 	FORCEINLINE UBuffComponent* GetBuff() const {return Buff;}
+	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const {return AttachedGrenade;}
 };

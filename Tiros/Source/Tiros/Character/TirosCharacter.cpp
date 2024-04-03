@@ -297,6 +297,10 @@ void ATirosCharacter::BeginPlay()
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ATirosCharacter::ReceiveDamage);
 	}
+	if(AttachedGrenade)
+	{
+		AttachedGrenade->SetVisibility(false);
+	}
 }
 
 void ATirosCharacter::Destroyed()
