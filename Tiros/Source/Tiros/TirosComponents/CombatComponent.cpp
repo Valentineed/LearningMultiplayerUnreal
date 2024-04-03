@@ -11,6 +11,7 @@
 #include "Tiros/Character/TirosCharacter.h"
 #include "Tiros/PlayerController/TirosPlayerController.h"
 #include "Tiros/Weapon/Weapon.h"
+#include "Tiros/Weapon/Projectile.h"
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
 
@@ -32,6 +33,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, bAiming);	
 	DOREPLIFETIME(UCombatComponent, CombatState);	
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);	
+	DOREPLIFETIME(UCombatComponent, Grenades);	
 }
 
 void UCombatComponent::BeginPlay()
@@ -99,6 +101,26 @@ void UCombatComponent::ThrowGrenadeFinished()
 void UCombatComponent::LaunchGrenade()
 {
 	ShowAttachedGrenade(false);
+	if(Character && Character->IsLocallyControlled())
+	{
+		RPC_ServerLaunchGrenade(HitTarget);
+	}
+}
+
+void UCombatComponent::RPC_ServerLaunchGrenade_Implementation(const FVector_NetQuantize& Target)
+{
+	if(Character && GrenadeClass && Character->GetAttachedGrenade())
+	{
+		const FVector StartingLocation =  Character->GetAttachedGrenade()->GetComponentLocation();
+		const FVector ToTarget = Target - StartingLocation;
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = Character;
+		SpawnParams.Instigator = Character;
+		if(UWorld* World = GetWorld())
+		{
+			World->SpawnActor<AProjectile>(GrenadeClass, StartingLocation, ToTarget.Rotation(), SpawnParams);
+		}
+	}
 }
 
 void UCombatComponent::Fire()
@@ -324,6 +346,11 @@ void UCombatComponent::UpdateAmmoValues()
 	EquippedWeapon->AddAmmo(ReloadAmount);
 }
 
+void UCombatComponent::OnRep_Grenades()
+{
+	UpdateHUDGrenade();
+}
+
 void UCombatComponent::OnRep_CombatState()
 {
 	switch (CombatState)
@@ -371,7 +398,11 @@ int32 UCombatComponent::AmountToReload()
 
 void UCombatComponent::ThrowGrenade()
 {
-	if(CombatState != ECombatState::ECS_Unoccupied)
+	if(Grenades == 0)
+	{
+		return;
+	}
+	if(CombatState != ECombatState::ECS_Unoccupied || EquippedWeapon == nullptr)
 	{
 		return;
 	}
@@ -386,16 +417,36 @@ void UCombatComponent::ThrowGrenade()
 	{
 		RPC_ServerThrowGrenade();
 	}
+	if(Character && Character->HasAuthority())
+	{
+		Grenades = FMath::Clamp(Grenades - 1,0, MaxGrenades);
+		UpdateHUDGrenade();
+	}	
 }
 
 void UCombatComponent::RPC_ServerThrowGrenade_Implementation()
 {
+	if(Grenades == 0)
+	{
+		return;
+	}
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 	if(Character)
 	{
 		Character->PlayThrowGrenadeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
 		ShowAttachedGrenade(true);
+	}
+	Grenades = FMath::Clamp(Grenades - 1,0, MaxGrenades);
+	UpdateHUDGrenade();
+}
+
+void UCombatComponent::UpdateHUDGrenade()
+{
+	Controller = Controller == nullptr ? Cast<ATirosPlayerController>(Character->Controller) : Controller;
+	if(Controller)
+	{
+		Controller->SetHUDGrenades(Grenades);
 	}
 }
 

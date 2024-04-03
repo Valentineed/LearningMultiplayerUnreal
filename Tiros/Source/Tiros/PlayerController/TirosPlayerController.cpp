@@ -226,6 +226,21 @@ void ATirosPlayerController::SetHUDAnnouncementCountdown(float CountdownTime)
 	}
 }
 
+void ATirosPlayerController::SetHUDGrenades(int32 Grenades)
+{
+	TirosHUD = TirosHUD == nullptr ? Cast<ATirosHUD>(GetHUD()) : TirosHUD;
+	if(TirosHUD && TirosHUD->CharacterOverlay && TirosHUD->CharacterOverlay->GrenadesText)
+	{
+		const FString GrenadesText = FString::Printf(TEXT("%d"), Grenades);
+		TirosHUD->CharacterOverlay->GrenadesText->SetText(FText::FromString(GrenadesText));
+	}
+	else
+	{
+		bInitializeGrenade = true;
+		HUDGrenades = Grenades;
+	}
+}
+
 void ATirosPlayerController::SetHUDTime()
 {
 	float TimeLeft = 0.f;
@@ -270,6 +285,15 @@ void ATirosPlayerController::PoolInit()
 				if(bInitializeShield) SetHUDShield(HUDShield,HUDMaxShield);
 				if(bInitializeScore) SetHUDScore(HUDScore);
 				if(bInitializeDeath) SetHUDDeaths(HUDDeaths);
+
+				if(bInitializeGrenade)
+				{
+					ATirosCharacter* TirosCharacter = Cast<ATirosCharacter>(GetPawn());
+					if(TirosCharacter && TirosCharacter->GetCombat())
+					{
+						SetHUDGrenades(TirosCharacter->GetCombat()->GetGrenades());
+					}
+				}				
 			}
 		}
 	}

@@ -23,6 +23,7 @@ public:
 	void SetHUDCarriedAmmo(int32 Ammo);
 	void SetHUDMatchCountdown(float CountdownTime);
 	void SetHUDAnnouncementCountdown(float CountdownTime);
+	void SetHUDGrenades(int32 Grenades);
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaSeconds) override;
 	
@@ -94,4 +95,6 @@ private:
 	float HUDScore;
 	bool bInitializeDeath = false;
 	int32 HUDDeaths;
+	bool bInitializeGrenade = false;
+	int32 HUDGrenades;
 };
