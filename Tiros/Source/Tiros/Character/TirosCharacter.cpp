@@ -323,6 +323,8 @@ void ATirosCharacter::EliminatedTimerFinished()
 void ATirosCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	SpawnDefaultWeapon();
+	UpdateHUDAmmo();
 	UpdateHUDHealth();
 	UpdateHUDShield();
 	if(HasAuthority())
@@ -726,6 +728,31 @@ void ATirosCharacter::UpdateHUDShield()
 	if(TirosPlayerController)
 	{
 		TirosPlayerController->SetHUDShield(Shield, MaxShield);
+	}
+}
+
+void ATirosCharacter::UpdateHUDAmmo()
+{
+	TirosPlayerController = TirosPlayerController == nullptr ? Cast<ATirosPlayerController>(Controller) : TirosPlayerController;
+	if(TirosPlayerController && Combat && Combat->EquippedWeapon)
+	{
+		TirosPlayerController->SetHUDCarriedAmmo(Combat->CarriedAmmo);
+		TirosPlayerController->SetHUDWeaponAmmo(Combat->EquippedWeapon->GetAmmo());
+	}
+}
+
+void ATirosCharacter::SpawnDefaultWeapon()
+{
+	ATirosGameMode* TirosGameMode = Cast<ATirosGameMode>(UGameplayStatics::GetGameMode(this));
+	UWorld* World = GetWorld();
+	if(TirosGameMode && World && !bEliminated && DefaultWeaponClass)
+	{
+		AWeapon* StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		StartingWeapon->bDestroyWeapon = true;
+		if(Combat)
+		{
+			Combat->EquipWeapon(StartingWeapon);
+		}
 	}
 }
 

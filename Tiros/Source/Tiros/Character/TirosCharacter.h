@@ -41,6 +41,9 @@ public:
 	void ShowSniperScopeWidget(bool bShowScope);
 	void UpdateHUDHealth();
 	void UpdateHUDShield();
+	void UpdateHUDAmmo();
+
+	void SpawnDefaultWeapon();
 protected:
 	virtual void BeginPlay() override;
 	virtual void Destroyed() override;
@@ -68,7 +71,7 @@ protected:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 
-	// Pool for any revelant class and initialize your HUD
+	// Pool for any relevant class and initialize your HUD
 	void PollInit();
 	void RotateInPlace(float DeltaTime);
 private:
@@ -208,6 +211,12 @@ private:
 	 */
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* AttachedGrenade;
+
+	/**
+	 * Default weapon
+	 */
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeaponClass;
 	
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);

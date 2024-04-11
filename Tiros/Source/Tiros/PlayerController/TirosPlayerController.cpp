@@ -178,6 +178,11 @@ void ATirosPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 		const FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		TirosHUD->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(AmmoText));
 	}
+	else
+	{
+		bInitializeWeaponAmmo = true;
+		HUDWeaponAmmo = Ammo;
+	}
 }
 
 void ATirosPlayerController::SetHUDCarriedAmmo(int32 Ammo)
@@ -187,6 +192,11 @@ void ATirosPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 	{
 		const FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		TirosHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(AmmoText));
+	}
+	else
+	{
+		bInitializeCarriedAmmo = true;
+		HUDCarriedAmmo = Ammo;
 	}
 }
 
@@ -285,6 +295,8 @@ void ATirosPlayerController::PoolInit()
 				if(bInitializeShield) SetHUDShield(HUDShield,HUDMaxShield);
 				if(bInitializeScore) SetHUDScore(HUDScore);
 				if(bInitializeDeath) SetHUDDeaths(HUDDeaths);
+				if(bInitializeCarriedAmmo) SetHUDCarriedAmmo(HUDCarriedAmmo);
+				if(bInitializeWeaponAmmo) SetHUDWeaponAmmo(HUDWeaponAmmo);
 
 				if(bInitializeGrenade)
 				{
