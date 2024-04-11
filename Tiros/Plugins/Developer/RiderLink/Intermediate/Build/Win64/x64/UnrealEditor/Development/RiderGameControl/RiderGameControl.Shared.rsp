@@ -15,6 +15,7 @@
 /I "D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Source\RD\thirdparty\spdlog\include"
 /I "D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Source\RD\thirdparty\clsocket\src"
 /I "D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Source\RD\thirdparty\CTPL\include"
+/I "D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Source\RD\thirdparty\utf-cpp\include"
 /I "D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Source"
 /I "Runtime\Core\Public"
 /I "Runtime\Core\Internal"

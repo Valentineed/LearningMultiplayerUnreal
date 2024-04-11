@@ -35,6 +35,9 @@
 /NODEFAULTLIB:"LIBCPD"
 /FUNCTIONPADMIN:6
 "D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RiderLink\Module.RiderLink.cpp.obj"
+"D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RiderLink\RiderLink.cpp.obj"
+"D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RiderLink\instantiations_UE4Library.cpp.obj"
+"D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RiderLink\instantiations_RdEditorRoot.cpp.obj"
 "D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RiderLink\Default.rc2.res"
 "..\Intermediate\Build\Win64\x64\UnrealEditor\Development\Core\UnrealEditor-Core.lib"
 "D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Intermediate\Build\Win64\x64\UnrealEditor\Development\RD\UnrealEditor-RD.lib"

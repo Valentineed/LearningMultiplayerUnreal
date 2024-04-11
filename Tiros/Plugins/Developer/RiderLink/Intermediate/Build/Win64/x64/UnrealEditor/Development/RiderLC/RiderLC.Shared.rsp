@@ -276,6 +276,7 @@
 /I "D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Source\RD\thirdparty\spdlog\include"
 /I "D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Source\RD\thirdparty\clsocket\src"
 /I "D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Source\RD\thirdparty\CTPL\include"
+/I "D:\WaveTD\LearningMultiplayer\Tiros\Plugins\Developer\RiderLink\Source\RD\thirdparty\utf-cpp\include"
 /I "..\Intermediate\Build\Win64\UnrealEditor\Inc\LiveCoding\UHT"
 /I "Developer\Windows\LiveCoding\Public"
 /external:W0
