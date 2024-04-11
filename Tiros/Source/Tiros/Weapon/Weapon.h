@@ -73,11 +73,13 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* EquipSound;
-	
+
 	/**
 	* Enable or disable custom depth
 	*/
 	void EnableCustomDepth(bool bEnable);
+	
+	bool bDestroyWeapon = false;
 	
 protected:
 	virtual void BeginPlay() override;

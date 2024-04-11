@@ -273,12 +273,7 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 	AttachActorToBackpack(WeaponToEquip);
 	PlayEquipWeaponSound(WeaponToEquip);
-	//SecondaryWeapon->SetOwner(Character);
-	if(EquippedWeapon == nullptr)
-	{
-		return;
-	}
-	EquippedWeapon->SetOwner(Character);
+	SecondaryWeapon->SetOwner(Character);
 }
 
 void UCombatComponent::DropEquippedWeapon()

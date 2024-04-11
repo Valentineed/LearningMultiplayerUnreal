@@ -62,6 +62,8 @@ protected:
 	void FireButtonRelease();
 	void PlayHitReactMontage();
 	void GrenadeButtonPressed();
+	void DropOrDestroyWeapon(AWeapon* Weapon);
+	void DropOrDestroyWeapons();
 	
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
@@ -188,7 +190,16 @@ private:
 	// Material instance set on the BP, used with dynamic instance
 	UPROPERTY(EditAnywhere, Category = Eliminated)
 	UMaterialInstance* DissolveMaterialInstance;
+	
+	/**
+	 * Elim Bot
+	 */
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ElimBotEffect;
 
+	UPROPERTY(VisibleAnywhere)
+	UParticleSystemComponent* ElimBotComponent;
+	
 	UPROPERTY()
 	class ATirosPlayerState* TirosPlayerState;
 

@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "Tiros/Tiros.h"
 #include "Tiros/GameMode/TirosGameMode.h"
 #include "Tiros/PlayerController/TirosPlayerController.h"
@@ -235,12 +236,36 @@ void ATirosCharacter::OnRep_ReplicatedMovement()
 
 void ATirosCharacter::Eliminated()
 {
-	if(Combat && Combat->EquippedWeapon)
-	{
-		Combat->EquippedWeapon->Dropped();
-	}
+	DropOrDestroyWeapons();
 	RPC_MulticastEliminated();
 	GetWorldTimerManager().SetTimer(EliminatedTimer, this, &ThisClass::EliminatedTimerFinished, EliminatedDelay);
+}
+
+void ATirosCharacter::DropOrDestroyWeapons()
+{
+	if(Combat)
+	{
+		if(Combat->EquippedWeapon)
+		{
+			DropOrDestroyWeapon(Combat->EquippedWeapon);
+		}
+		if(Combat->SecondaryWeapon)
+		{
+			DropOrDestroyWeapon(Combat->SecondaryWeapon);
+		}
+	}
+}
+
+void ATirosCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
+{
+	if(Weapon->bDestroyWeapon)
+	{
+		Weapon->Destroy();
+	}
+	else
+	{
+		Weapon->Dropped();
+	}
 }
 
 void ATirosCharacter::RPC_MulticastEliminated_Implementation()
@@ -274,6 +299,13 @@ void ATirosCharacter::RPC_MulticastEliminated_Implementation()
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+	//Spawn elim bot
+	if(ElimBotEffect)
+	{
+		FVector ElimBotSpawnPoint(GetActorLocation().X,GetActorLocation().Y, GetActorLocation().Z + 200.f);
+		ElimBotComponent = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ElimBotEffect,ElimBotSpawnPoint, GetActorRotation());
+		//maybe spawn a sound in future like a robot sound Bumblebee
+	}
 	if(IsLocallyControlled() && Combat && Combat->bAiming && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
 	{
 		ShowSniperScopeWidget(false);
@@ -306,6 +338,10 @@ void ATirosCharacter::BeginPlay()
 void ATirosCharacter::Destroyed()
 {
 	Super::Destroyed();
+	if(ElimBotComponent)
+	{
+		ElimBotComponent->DestroyComponent();
+	}
 	ATirosGameMode* TirosGameMode = Cast<ATirosGameMode>(UGameplayStatics::GetGameMode(this));
 	const bool bMatchNotInProgress = TirosGameMode && TirosGameMode->GetMatchState() != MatchState::InProgress;
 	if(Combat && Combat->EquippedWeapon && bMatchNotInProgress)
