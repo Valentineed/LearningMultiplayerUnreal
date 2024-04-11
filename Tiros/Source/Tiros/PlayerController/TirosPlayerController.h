@@ -63,6 +63,10 @@ protected:
 
 	UFUNCTION(Client, Reliable)
 	void RPC_ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTim);
+
+	void HighPingWarning();
+	void StopHighPingWarning();
+	void CheckPing(float DeltaSeconds);
 private:
 	UPROPERTY()
 	class ATirosHUD* TirosHUD;
@@ -101,4 +105,17 @@ private:
 	float HUDCarriedAmmo;
 	bool bInitializeWeaponAmmo = false;
 	float HUDWeaponAmmo;
+
+	float HighPingRunningTime = 0.f;
+	
+	UPROPERTY(EditAnywhere)
+	float HighPingDuration = 5.f;
+
+	float PingAnimationRunningTime = 0.f;
+	
+	UPROPERTY(EditAnywhere)
+	float CheckPingFrequency = 10.f;
+
+	UPROPERTY(EditAnywhere)
+	float HighPingThreshold = 50.f;
 };

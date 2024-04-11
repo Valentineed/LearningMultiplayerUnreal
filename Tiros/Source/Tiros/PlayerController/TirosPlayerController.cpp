@@ -3,6 +3,7 @@
 
 #include "TirosPlayerController.h"
 
+#include "Components/Image.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "GameFramework/GameMode.h"
@@ -54,6 +55,29 @@ void ATirosPlayerController::CheckTimeSync(float DeltaSeconds)
 	}
 }
 
+void ATirosPlayerController::HighPingWarning()
+{
+	TirosHUD = TirosHUD == nullptr ? Cast<ATirosHUD>(GetHUD()) : TirosHUD;
+	if(TirosHUD && TirosHUD->CharacterOverlay && TirosHUD->CharacterOverlay->HighPingImage && TirosHUD->CharacterOverlay->HighPingAnimation)
+	{
+		TirosHUD->CharacterOverlay->HighPingImage->SetOpacity(1.f);
+		TirosHUD->CharacterOverlay->PlayAnimation(TirosHUD->CharacterOverlay->HighPingAnimation);
+	}
+}
+
+void ATirosPlayerController::StopHighPingWarning()
+{
+	TirosHUD = TirosHUD == nullptr ? Cast<ATirosHUD>(GetHUD()) : TirosHUD;
+	if(TirosHUD && TirosHUD->CharacterOverlay && TirosHUD->CharacterOverlay->HighPingImage && TirosHUD->CharacterOverlay->HighPingAnimation)
+	{
+		TirosHUD->CharacterOverlay->HighPingImage->SetOpacity(0.f);
+		if(TirosHUD->CharacterOverlay->IsAnimationPlaying(TirosHUD->CharacterOverlay->HighPingAnimation))
+		{
+			TirosHUD->CharacterOverlay->StopAnimation(TirosHUD->CharacterOverlay->HighPingAnimation);
+		}
+	}
+}
+
 void ATirosPlayerController::RPC_ServerCheckMatchState_Implementation()
 {
 	if(const ATirosGameMode* GameMode = Cast<ATirosGameMode>(UGameplayStatics::GetGameMode(this)))
@@ -92,6 +116,35 @@ void ATirosPlayerController::Tick(float DeltaSeconds)
 
 	CheckTimeSync(DeltaSeconds);
 	PoolInit();
+
+	CheckPing(DeltaSeconds);
+}
+
+void ATirosPlayerController::CheckPing(float DeltaSeconds)
+{
+	HighPingRunningTime += DeltaSeconds;
+	if(HighPingRunningTime > CheckPingFrequency)
+	{
+		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
+		if(PlayerState)
+		{
+			if(PlayerState->GetPingInMilliseconds() * 4.f > HighPingThreshold)// ping is compressed
+			{
+				HighPingWarning();
+				PingAnimationRunningTime = 0.f;
+			}
+		}
+		HighPingRunningTime = 0.f;
+	}
+	//bHighPingAnimationPlaying
+	if(TirosHUD && TirosHUD->CharacterOverlay && TirosHUD->CharacterOverlay->HighPingAnimation && TirosHUD->CharacterOverlay->IsAnimationPlaying(TirosHUD->CharacterOverlay->HighPingAnimation))
+	{
+		PingAnimationRunningTime += DeltaSeconds;
+		if(PingAnimationRunningTime > HighPingDuration)
+		{
+			StopHighPingWarning();
+		}
+	}
 }
 
 void ATirosPlayerController::OnPossess(APawn* InPawn)
