@@ -61,7 +61,7 @@ void ATirosPlayerController::HighPingWarning()
 	if(TirosHUD && TirosHUD->CharacterOverlay && TirosHUD->CharacterOverlay->HighPingImage && TirosHUD->CharacterOverlay->HighPingAnimation)
 	{
 		TirosHUD->CharacterOverlay->HighPingImage->SetOpacity(1.f);
-		TirosHUD->CharacterOverlay->PlayAnimation(TirosHUD->CharacterOverlay->HighPingAnimation);
+		TirosHUD->CharacterOverlay->PlayAnimation(TirosHUD->CharacterOverlay->HighPingAnimation, 0.f, 5);
 	}
 }
 
@@ -125,7 +125,6 @@ void ATirosPlayerController::CheckPing(float DeltaSeconds)
 	HighPingRunningTime += DeltaSeconds;
 	if(HighPingRunningTime > CheckPingFrequency)
 	{
-		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
 		if(PlayerState)
 		{
 			if(PlayerState->GetPingInMilliseconds() * 4.f > HighPingThreshold)// ping is compressed
