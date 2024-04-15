@@ -49,17 +49,14 @@ void AWeapon::EnableCustomDepth(bool bEnable)
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	AreaSphere->SetCollisionResponseToChannel(ECC_Pawn,ECR_Overlap);
+	AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereOverlap);
+	AreaSphere->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnSphereEndOverlap);
 	if(PickUpWidget)
 	{
 		PickUpWidget->SetVisibility(false);
 	}
-	if(HasAuthority())
-	{
-		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		AreaSphere->SetCollisionResponseToChannel(ECC_Pawn,ECR_Overlap);
-		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereOverlap);
-		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnSphereEndOverlap);
-	}	
 }
 
 void AWeapon::Tick(float DeltaTime)
