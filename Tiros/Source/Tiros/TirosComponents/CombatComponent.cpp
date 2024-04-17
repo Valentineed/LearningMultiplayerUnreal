@@ -14,6 +14,7 @@
 #include "Tiros/Weapon/Projectile.h"
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
+#include "Tiros/Weapon/Shotgun.h"
 
 
 // Sets default values for this component's properties
@@ -153,7 +154,10 @@ void UCombatComponent::Fire()
 
 void UCombatComponent::FireProjectileWeapon()
 {
-	LocalFire(HitTarget);
+	if(Character && !Character->HasAuthority())
+	{
+		LocalFire(HitTarget);
+	}
 	RPC_ServerFire(HitTarget);
 }
 
@@ -162,13 +166,27 @@ void UCombatComponent::FireHitScanWeapon()
 	if(EquippedWeapon)
 	{
 		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget;
-		LocalFire(HitTarget);
+		if(Character && !Character->HasAuthority())
+		{
+			LocalFire(HitTarget);
+		}
 		RPC_ServerFire(HitTarget);
 	}
 }
 
 void UCombatComponent::FireShotgunWeapon()
 {
+	//The cast in this case is fine because a shotgun have low fire rate
+	if(AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon))
+	{
+		TArray<FVector_NetQuantize> HitTargets;
+		Shotgun->ShotgunTraceEndWithScatter(HitTarget, HitTargets);
+		if(Character && !Character->HasAuthority())
+		{
+			ShotgunLocalFire(HitTargets);
+		}
+		RPC_ServerShotgunFire(HitTargets);
+	}
 }
 
 void UCombatComponent::StartFireTimer()
@@ -237,6 +255,20 @@ void UCombatComponent::RPC_MulticastFire_Implementation(const FVector_NetQuantiz
 	LocalFire(TraceHitTarget);
 }
 
+void UCombatComponent::RPC_ServerShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	RPC_MulticastShotgunFire(TraceHitTargets);
+}
+
+void UCombatComponent::RPC_MulticastShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	if(Character && Character->IsLocallyControlled() && !Character->HasAuthority())
+	{
+		return;
+	}
+	ShotgunLocalFire(TraceHitTargets);
+}
+
 void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 {
 	if(EquippedWeapon == nullptr)
@@ -247,6 +279,21 @@ void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 	{
 		Character->PlayFireMontage(bAiming);
 		EquippedWeapon->Fire(TraceHitTarget);
+	}
+}
+
+void UCombatComponent::ShotgunLocalFire(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	AShotgun*  Shotgun = Cast<AShotgun>(EquippedWeapon);
+	if(Shotgun == nullptr || Character == nullptr)
+	{
+		return;
+	}
+	if(CombatState == ECombatState::ECS_Reloading || CombatState == ECombatState::ECS_Unoccupied)
+	{
+		Character->PlayFireMontage(bAiming);
+		Shotgun->FireShotgun(TraceHitTargets);
+		CombatState = ECombatState::ECS_Unoccupied;
 	}
 }
 
@@ -616,7 +663,7 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 			Start += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
 		}
 		
-		const FVector End = Start + CrosshairWorldDirection * TRACE_LENGHT;
+		const FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
 
 		if(!GetWorld()->LineTraceSingleByChannel(TraceHitResult, Start, End, ECC_Visibility))
 		{

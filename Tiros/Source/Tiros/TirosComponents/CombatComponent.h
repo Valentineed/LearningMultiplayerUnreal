@@ -60,12 +60,19 @@ protected:
 	void FireHitScanWeapon();
 	void FireShotgunWeapon();
 	void LocalFire(const FVector_NetQuantize& TraceHitTarget);
+	void ShotgunLocalFire(const TArray<FVector_NetQuantize>& TraceHitTargets);
 
 	UFUNCTION(Server,Reliable)
 	void RPC_ServerFire(const FVector_NetQuantize& TraceHitTarget);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void RPC_MulticastFire(const FVector_NetQuantize& TraceHitTarget);
+
+	UFUNCTION(Server,Reliable)
+	void RPC_ServerShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTargets);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void RPC_MulticastShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTargets);
 	
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
